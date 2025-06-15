@@ -102,39 +102,57 @@ button:hover {
     font-weight: bold;
 }
 
-/* === Vertikaler Lauftext ============================================ */
+/* === Vertikaler Lauftext (Initial-D-Style) =========================== */
+
+/*  Breite deiner Login-Box als Variable (gleiche Zahl wie .login-container)  */
+:root{ --login-width: 400px; }
+
+/*  Basis-Container left / right  */
 .scroll-text{
     position:fixed;
-    top:0; height:100vh; width:100px;
-    pointer-events:none; z-index:-1; overflow:hidden;
+    top:0;
+    height:100vh;
+    width:120px;                    /* Streifenbreite */
+    overflow:hidden;
+    pointer-events:none;
+    z-index:-1;
     opacity:.45;
 }
-.scroll-text.left  { left:40px;}
-.scroll-text.right { right:40px;}
 
+.scroll-text.left  { left : calc((100vw - var(--login-width))/2 - 140px); }
+.scroll-text.right { right: calc((100vw - var(--login-width))/2 - 140px); }
+
+/*  Track bewegt sich – zwei Inhalte → 200 % Höhe  */
 .track{
-    display:flex; flex-direction:column;
+    display:flex;
+    flex-direction:column;
     animation:scroll-up 18s linear infinite;
 }
-.track.reverse{ animation:scroll-down 18s linear infinite;}
+.track.reverse{ animation:scroll-down 18s linear infinite; }
 
-.scroll-text span{
+/*  Inhalt: japanischer Text  */
+.scroll-content{
     writing-mode:vertical-rl;
-    font:90px/1 'Noto Sans JP',sans-serif;
-    color:#fff; text-shadow:0 0 6px #fff;
+    font-family:'Noto Sans JP',sans-serif;
+    font-size:90px;
+    line-height:1.4;
     white-space:nowrap;
+    color:#fff;
+    text-shadow:0 0 6px #fff;
 }
 
-/* ── Animationen ───────────────────────────────────────────────────── */
+/*  LINKS: unten → oben (Text drehen, damit richtig lesbar)  */
+.scroll-text.left .scroll-content{ transform:rotate(180deg); }
+
+/*  KEYFRAMES: genau 100 % der Track-Höhe (eine Hälfte)  */
 @keyframes scroll-up{
   0%   { transform:translateY(0); }
-  100% { transform:translateY(-100%); }
+  100% { transform:translateY(-50%); }   /*   -50 %  =  eine Spurhöhe   */
 }
 @keyframes scroll-down{
-  0%   { transform:translateY(-100%); }
+  0%   { transform:translateY(-50%); }
   100% { transform:translateY(0); }
 }
-
 
 /* ── Navbar ──────────────────────────────────────── */
 .topnav {
