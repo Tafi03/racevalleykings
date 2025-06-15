@@ -38,14 +38,6 @@ def init_db() -> None:
 init_db()
 
 # ───────────────────────────
-# Admin‑User einmalig anlegen
-# ───────────────────────────
-
-# Nur in Produktion ausführen (Render)
-if os.environ.get("FLASK_ENV") == "production":
-    setup_admin()
-
-# ───────────────────────────
 # Hilfsfunktionen
 # ───────────────────────────
 
