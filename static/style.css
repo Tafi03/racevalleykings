@@ -53,3 +53,9 @@ body.dark button:hover{background:#444;}
     cursor:pointer;
     color:gold;
 }
+
+table button{
+  padding:4px 8px;font-size:13px;background:#d9534f;color:#fff;
+  border:none;border-radius:6px;cursor:pointer;
+}
+table button:hover{background:#c9302c;}

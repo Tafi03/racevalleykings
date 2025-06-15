@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Race Valley Kings 🏁</title>
+    <title>Race Valley Kings</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
 </head>
@@ -30,14 +30,23 @@
     <h2>Rangliste</h2>
     <table>
         <thead>
-            <tr><th>Name</th><th>Zeit</th><th>Datum</th></tr>
+            <tr><th>Name</th><th>Zeit</th><th>Datum</th><th>Aktion</th></tr>
         </thead>
         <tbody>
-            {% for n, z, d in zeiten %}
+            {% for eintrag in zeiten %}
             <tr>
-                <td>{{ n }}</td>
-                <td>{{ z }}</td>
-                <td>{{ d }}</td>
+                <td>{{ eintrag.name }}</td>
+                <td>{{ eintrag.zeit }}</td>
+                <td>{{ eintrag.datum }}</td>
+                <td>
+                    {% if admin or eintrag.user == user %}
+                    <form action="/delete/{{ eintrag.id }}" method="POST" style="display:inline;">
+                        <button type="submit" title="Löschen">🗑️</button>
+                    </form>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>

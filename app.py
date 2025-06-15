@@ -5,9 +5,9 @@ import os
 
 # ── Flask-Grundkonfiguration ──────────────────────────────────────────
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")      # in Render setzen!
+app.secret_key = os.environ.get["SECRET_KEY"]
 
-DATABASE_URL = os.environ["DATABASE_URL"]                        # Render-Postgres
+DATABASE_URL = os.environ["DATABASE_URL"]
 engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
 
 # ── Datenbank-Schema einmalig anlegen ────────────────────────────────
@@ -27,17 +27,17 @@ def init_db() -> None:
                 name   TEXT NOT NULL,
                 zeit   TEXT NOT NULL,
                 datum  DATE NOT NULL,
-                "user"   TEXT
+                "user" TEXT
             );
         """))
-
         try:
-            conn.execute(text("ALTER TABLE zeiten ADD COLUMN user TEXT;"))
+            conn.execute(text('ALTER TABLE zeiten ADD COLUMN "user" TEXT;'))
         except Exception:
             pass
+
 init_db()
 
-# ── Hilfsfunktionen ─────────────────────────────────────────────────
+# ── Hilfsfunktionen ───────────────────────────────────────────────────
 def current_user_role():
     user = session.get("user")
     if not user:
@@ -61,24 +61,25 @@ def add_user(username: str, password_plain: str, is_admin: bool = False):
             {"u": username, "p": pw_hash, "a": is_admin}
         )
 
-# ── Routen ──────────────────────────────────────────────────────────
+# ── Routen ────────────────────────────────────────────────────────────
 @app.route('/')
 def root():
-    """Start: immer erst zur Login-Seite – außer man ist eingeloggt."""
     if 'user' in session:
         return redirect('/zeiten')
     return redirect('/login')
 
 @app.route('/zeiten')
 def zeiten():
-    """Hauptseite (Rangliste) – nur für eingeloggte User."""
     if 'user' not in session:
         return redirect('/login')
 
     user, admin = current_user_role()
     with engine.begin() as conn:
         zeiten = conn.execute(
-            text("SELECT name, zeit, datum FROM zeiten ORDER BY zeit ASC")
+            text("""
+                SELECT id, name, zeit, datum, "user"
+                FROM zeiten ORDER BY zeit ASC
+            """)
         ).all()
     return render_template("index.html", zeiten=zeiten, user=user, admin=admin)
 
@@ -89,11 +90,31 @@ def add():
     name  = request.form['name']
     zeit  = request.form['zeit']
     datum = request.form['datum']
+    owner = session['user']
     with engine.begin() as conn:
         conn.execute(
-            text("INSERT INTO zeiten (name, zeit, datum) VALUES (:n, :z, :d)"),
-            {"n": name, "z": zeit, "d": datum}
+            text("""
+                INSERT INTO zeiten (name, zeit, datum, "user")
+                VALUES (:n, :z, :d, :o)
+            """),
+            {"n": name, "z": zeit, "d": datum, "o": owner}
         )
+    return redirect('/zeiten')
+
+@app.route('/delete/<int:zid>', methods=['POST'])
+def delete_time(zid):
+    user, is_admin = current_user_role()
+    if not user:
+        return redirect('/login')
+
+    with engine.begin() as conn:
+        if is_admin:
+            conn.execute(text("DELETE FROM zeiten WHERE id = :id"), {"id": zid})
+        else:
+            conn.execute(
+                text('DELETE FROM zeiten WHERE id = :id AND "user" = :u'),
+                {"id": zid, "u": user}
+            )
     return redirect('/zeiten')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -118,7 +139,7 @@ def logout():
     session.pop('user', None)
     return redirect('/login')
 
-# ── Admin-Bereich ────────────────────────────────────────────────────
+# ── Admin-Bereich ─────────────────────────────────────────────────────
 @app.route('/admin')
 def admin_panel():
     user, is_admin = current_user_role()
@@ -151,6 +172,6 @@ def admin_delete_user(user_id):
         conn.execute(text("DELETE FROM nutzer WHERE id = :id"), {"id": user_id})
     return redirect('/admin')
 
-# ── Lokalstart ──────────────────────────────────────────────────────
+# ── Lokalstart ───────────────────────────────────────────────────────
 if __name__ == '__main__':
     app.run(debug=True)
