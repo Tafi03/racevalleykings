@@ -107,7 +107,7 @@ button:hover {
     position: fixed;
     top: 0;
     height: 100vh;
-    width: 100px; /* etwas schmaler für zentrierte Platzierung */
+    width: 100px;
     overflow: hidden;
     z-index: -1;
     pointer-events: none;
@@ -115,41 +115,42 @@ button:hover {
 }
 
 .scroll-text.left  {
-    left: calc((100vw - 400px) / 4);  /* Hälfte des linken Zwischenraums bei 400px Loginbox */
+    left: 40px;  /* zentrierter Abstand */
 }
 .scroll-text.right {
-    right: calc((100vw - 400px) / 4); /* Hälfte des rechten Zwischenraums */
+    right: 40px; /* zentrierter Abstand */
 }
 
 .scroll-text span {
-    display: inline-block;
+    display: block;
     writing-mode: vertical-rl;
     font-family: 'Noto Sans JP', sans-serif;
-    font-size: 60px;
+    font-size: 80px;
     color: white;
     text-shadow: 0 0 5px white;
     white-space: nowrap;
     line-height: 1.4;
 }
 
-/* ── Links: Text läuft nach oben ─────────────────────────────────────── */
+/* --- Linker Text (läuft nach oben) --- */
 .scroll-text.left span {
     transform: rotate(180deg);
-    animation: scroll-up 25s linear infinite;
+    animation: scroll-up 20s linear infinite;
 }
+
+/* --- Rechter Text (läuft nach unten) --- */
+.scroll-text.right span {
+    animation: scroll-down 20s linear infinite;
+}
+
 @keyframes scroll-up {
-    0%   { transform: translateY(100vh) rotate(180deg); }
+    0%   { transform: translateY(100%) rotate(180deg); }
     100% { transform: translateY(-100%) rotate(180deg); }
 }
 
-/* ── Rechts: Text läuft nach unten ───────────────────────────────────── */
-.scroll-text.right span {
-    transform: rotate(0deg);
-    animation: scroll-down 25s linear infinite;
-}
 @keyframes scroll-down {
     0%   { transform: translateY(-100%); }
-    100% { transform: translateY(100vh); }
+    100% { transform: translateY(100%); }
 }
 /* ── Navbar ──────────────────────────────────────── */
 .topnav {
