@@ -3,50 +3,92 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import create_engine, text
 import os
 
-# ——— Konfiguration ———
+# ───────────────────────────
+# Grundkonfiguration
+# ───────────────────────────
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
-DATABASE_URL = os.environ.get("DATABASE_URL")
-engine = create_engine(DATABASE_URL, future=True)
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")  # ✔ ENV‑Variable auf Render setzen!
 
-# ——— Admin-Setup (nur beim allerersten Start, dann löschen!) ———
-@app.before_first_request
-def setup_admin():
+DATABASE_URL = os.environ["DATABASE_URL"]  # kommt aus Render‑Postgres
+engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
+
+# ───────────────────────────
+# DB‑Schema initialisieren
+# ───────────────────────────
+
+def init_db() -> None:
     with engine.begin() as conn:
-        result = conn.execute(
-            text("SELECT COUNT(*) FROM nutzer WHERE username = :u"),
-            {"u": "admin"}
-        ).scalar()
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS nutzer (
+                id        SERIAL PRIMARY KEY,
+                username  TEXT UNIQUE NOT NULL,
+                passwort  TEXT NOT NULL,
+                is_admin  BOOLEAN DEFAULT FALSE
+            );
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS zeiten (
+                id     SERIAL PRIMARY KEY,
+                name   TEXT NOT NULL,
+                zeit   TEXT NOT NULL,
+                datum  DATE NOT NULL
+            );
+        """))
 
-        if result == 0:
-            conn.execute(text("""
-                INSERT INTO nutzer (username, passwort, is_admin)
-                VALUES (:u, :p, 1)
-            """), {
-                "u": "admin",
-                "p": generate_password_hash("beEnte21")
-            })
+init_db()
 
-# ——— Hilfsfunktionen ———
+# ───────────────────────────
+# Admin‑User einmalig anlegen
+# ───────────────────────────
+
+def setup_admin():
+    """Erzeugt Admin‑Nutzer, falls noch nicht vorhanden."""
+    with engine.begin() as conn:
+        exists = conn.execute(
+            text("SELECT 1 FROM nutzer WHERE username = :u"), {"u": "admin"}
+        ).fetchone()
+        if not exists:
+            conn.execute(
+                text("""
+                    INSERT INTO nutzer (username, passwort, is_admin)
+                    VALUES (:u, :p, TRUE)
+                """),
+                {
+                    "u": "admin",
+                    "p": generate_password_hash("beEnte21")  # ← Passwort hier anpassen
+                }
+            )
+
+# Nur in Produktion ausführen (Render)
+if os.environ.get("FLASK_ENV") == "production":
+    setup_admin()
+
+# ───────────────────────────
+# Hilfsfunktionen
+# ───────────────────────────
+
 def current_user_role():
-    username = session.get("user")
-    if not username:
+    user = session.get("user")
+    if not user:
         return None, False
     with engine.begin() as conn:
-        result = conn.execute(text(
-            "SELECT is_admin FROM nutzer WHERE username = :u"
-        ), {"u": username}).fetchone()
-    return username, bool(result and result[0] == 1)
+        row = conn.execute(
+            text("SELECT is_admin FROM nutzer WHERE username = :u"), {"u": user}
+        ).fetchone()
+    return user, bool(row and row[0])
 
-# ——— Routen ———
+# ───────────────────────────
+# Routen
+# ───────────────────────────
+
 @app.route('/')
 def index():
-    username, is_admin = current_user_role()
+    user, admin = current_user_role()
     with engine.begin() as conn:
-        zeiten = conn.execute(text(
-            "SELECT name, zeit, datum FROM zeiten ORDER BY zeit ASC"
-        )).fetchall()
-    return render_template("index.html", zeiten=zeiten, user=username, admin=is_admin)
+        zeiten = conn.execute(
+            text("SELECT name, zeit, datum FROM zeiten ORDER BY zeit ASC")
+        ).all()
+    return render_template("index.html", zeiten=zeiten, user=user, admin=admin)
 
 
 @app.route('/add', methods=['POST'])
@@ -57,9 +99,10 @@ def add():
     zeit = request.form['zeit']
     datum = request.form['datum']
     with engine.begin() as conn:
-        conn.execute(text(
-            "INSERT INTO zeiten (name, zeit, datum) VALUES (:n, :z, :d)"
-        ), {"n": name, "z": zeit, "d": datum})
+        conn.execute(
+            text("INSERT INTO zeiten (name, zeit, datum) VALUES (:n, :z, :d)"),
+            {"n": name, "z": zeit, "d": datum}
+        )
     return redirect('/')
 
 
@@ -70,10 +113,10 @@ def login():
         username = request.form['username']
         password = request.form['password']
         with engine.begin() as conn:
-            row = conn.execute(text(
-                "SELECT passwort FROM nutzer WHERE username = :u"
-            ), {"u": username}).fetchone()
-
+            row = conn.execute(
+                text("SELECT passwort FROM nutzer WHERE username = :u"),
+                {"u": username}
+            ).fetchone()
         if row and check_password_hash(row[0], password):
             session['user'] = username
             return redirect('/')
@@ -87,50 +130,48 @@ def logout():
     return redirect('/')
 
 
+# ───────────────────────────
+# Admin‑bereich
+# ───────────────────────────
 @app.route('/admin')
 def admin_panel():
-    username, is_admin = current_user_role()
-    if not is_admin:
+    user, admin = current_user_role()
+    if not admin:
         return redirect('/login')
     with engine.begin() as conn:
-        nutzer_liste = conn.execute(text(
-            "SELECT id, username, is_admin FROM nutzer"
-        )).fetchall()
-    return render_template("admin.html", nutzer=nutzer_liste)
+        users = conn.execute(text("SELECT id, username, is_admin FROM nutzer")).all()
+    return render_template("admin.html", nutzer=users)
 
 
 @app.route('/admin/add-user', methods=['POST'])
 def admin_add_user():
-    _, is_admin = current_user_role()
-    if not is_admin:
+    _, admin = current_user_role()
+    if not admin:
         return redirect('/login')
-
     username = request.form['username']
     password = request.form['password']
-    admin_flag = 1 if request.form.get('is_admin') == 'on' else 0
+    is_admin = request.form.get('is_admin') == 'on'
     pw_hash = generate_password_hash(password)
-
     try:
         with engine.begin() as conn:
             conn.execute(text("""
                 INSERT INTO nutzer (username, passwort, is_admin)
                 VALUES (:u, :p, :a)
-            """), {"u": username, "p": pw_hash, "a": admin_flag})
+            """), {"u": username, "p": pw_hash, "a": is_admin})
     except Exception:
         return "Benutzername existiert bereits"
-
     return redirect('/admin')
 
 
 @app.route('/admin/delete-user/<int:user_id>', methods=['POST'])
 def admin_delete_user(user_id):
-    _, is_admin = current_user_role()
-    if not is_admin:
+    _, admin = current_user_role()
+    if not admin:
         return redirect('/login')
     with engine.begin() as conn:
         conn.execute(text("DELETE FROM nutzer WHERE id = :id"), {"id": user_id})
     return redirect('/admin')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
