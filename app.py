@@ -87,17 +87,18 @@ def zeiten():
 def add():
     if 'user' not in session:
         return redirect('/login')
-    name  = request.form['name']
+    
     zeit  = request.form['zeit']
     datum = request.form['datum']
     owner = session['user']
+
     with engine.begin() as conn:
         conn.execute(
             text("""
                 INSERT INTO zeiten (name, zeit, datum, "user")
                 VALUES (:n, :z, :d, :o)
             """),
-            {"n": name, "z": zeit, "d": datum, "o": owner}
+            {"n": owner, "z": zeit, "d": datum, "o": owner}
         )
     return redirect('/zeiten')
 
