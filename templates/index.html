@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/style.css">
     <title>Race Valley Kings</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
     {% if user %}
-        <p>Eingeloggt als {{ user }} – <a href="/logout">Logout</a></p>
+        <p>Eingeloggt als {{ user }} <a href="/logout">Logout</a></p>
 
         {% if admin %}
             <p><a href="/admin">👑 Admin-Panel</a></p>
