@@ -60,29 +60,80 @@ button:hover {
 /* ── Login-Box ────────────────────────────────────── */
 .login-container {
     max-width: 400px;
-    margin: 10vh auto;
+    margin: 12vh auto;
     padding: 2em;
-    background: #1a1a1a;
+    background: #1e1e1e;
     border-radius: 12px;
     box-shadow: 0 0 15px #000;
     text-align: center;
 }
-.login-container input {
-    background: #222;
+
+.login-form input {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    margin-top: 15px;
+    font-size: 14px;
+    background: #333;
     color: #eee;
-    border: none;
-    margin-top: 10px;
 }
-.login-container button {
-    background: #ffd700;
-    color: #000;
-    border: none;
+
+.login-form button {
+    width: 100%;
     margin-top: 20px;
+    background: gold;
+    color: #000;
+    font-weight: bold;
+    font-size: 15px;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
 }
+
+.login-form button:hover {
+    background: #ffdd00;
+}
+
 .error {
     color: #f66;
     margin-bottom: 1em;
+    font-weight: bold;
 }
+
+/* --- Vertikaler Lauftext ------------------------------------------------ */
+.scroll-text{
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 40px;                /* Breite der Spalte */
+    overflow: hidden;
+    pointer-events: none;       /* klickt nicht mit */
+    z-index: -1;                /* hinter Inhalt */
+    opacity: 0.15;              /* dezent */
+}
+.scroll-text.left  { left: 0;  }
+.scroll-text.right { right: 0; }
+
+.scroll-text span{
+    display: inline-block;
+    writing-mode: vertical-rl;  /* Zeichen von oben nach unten */
+    transform: rotate(180deg);  /* japanisch vertikal korrekt ausrichten */
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 24px;
+    line-height: 1.2;
+    white-space: nowrap;
+    animation: scrollY 12s linear infinite;
+}
+
+@keyframes scrollY{
+    0%   { transform: translateY(100%) rotate(180deg); }
+    100% { transform: translateY(-100%) rotate(180deg); }
+}
+
+/* optional dunkler Modus intensiver machen */
+body.dark .scroll-text span{ opacity: 0.25; }
 
 /* ── Navbar ──────────────────────────────────────── */
 .topnav {
