@@ -41,24 +41,6 @@ init_db()
 # Admin‑User einmalig anlegen
 # ───────────────────────────
 
-def setup_admin():
-    """Erzeugt Admin‑Nutzer, falls noch nicht vorhanden."""
-    with engine.begin() as conn:
-        exists = conn.execute(
-            text("SELECT 1 FROM nutzer WHERE username = :u"), {"u": "admin"}
-        ).fetchone()
-        if not exists:
-            conn.execute(
-                text("""
-                    INSERT INTO nutzer (username, passwort, is_admin)
-                    VALUES (:u, :p, TRUE)
-                """),
-                {
-                    "u": "admin",
-                    "p": generate_password_hash("beEnte21")  # ← Passwort hier anpassen
-                }
-            )
-
 # Nur in Produktion ausführen (Render)
 if os.environ.get("FLASK_ENV") == "production":
     setup_admin()
