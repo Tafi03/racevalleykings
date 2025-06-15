@@ -171,12 +171,5 @@ def admin_delete_user(user_id: int):
         conn.commit()
     return redirect('/admin')
 
-# ──────────────────────────────────────────────────────────────
-# TEMPORÄR: einmaligen Admin für Render erzeugen
-# ──────────────────────────────────────────────────────────────
-if os.environ.get("FLASK_ENV") == "production":
-    add_user("admin", "beEnte21", is_admin=1)   # ⇒ Nach Live-Login wieder entfernen!
-
-# ──────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     app.run(debug=True)
