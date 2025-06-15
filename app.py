@@ -1,83 +1,51 @@
 from flask import Flask, render_template, request, redirect, session
-import sqlite3
-import os
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import create_engine, text
+import os
 
-# ──────────────────────────────────────────────────────────────
-# Flask-Grundkonfiguration
-# ──────────────────────────────────────────────────────────────
+# ——— Konfiguration ———
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")   # in Render als ENV Variable setzen!
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
+DATABASE_URL = os.environ.get("DATABASE_URL")
+engine = create_engine(DATABASE_URL, future=True)
 
-DB_PATH = "zeiten.db"
+# ——— Admin-Setup (nur beim allerersten Start, dann löschen!) ———
+@app.before_first_request
+def setup_admin():
+    with engine.begin() as conn:
+        result = conn.execute(
+            text("SELECT COUNT(*) FROM nutzer WHERE username = :u"),
+            {"u": "admin"}
+        ).scalar()
 
-# ──────────────────────────────────────────────────────────────
-# Datenbank initialisieren  (+ Spalte is_admin nachrüsten)
-# ──────────────────────────────────────────────────────────────
-def init_db() -> None:
-    with sqlite3.connect(DB_PATH) as conn:
-        # Tabelle für Rennzeiten
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS zeiten (
-                id      INTEGER PRIMARY KEY AUTOINCREMENT,
-                name    TEXT    NOT NULL,
-                zeit    TEXT    NOT NULL,
-                datum   TEXT    NOT NULL
-            );
-        """)
+        if result == 0:
+            conn.execute(text("""
+                INSERT INTO nutzer (username, passwort, is_admin)
+                VALUES (:u, :p, 1)
+            """), {
+                "u": "admin",
+                "p": generate_password_hash("beEnte21")
+            })
 
-        # Tabelle für Nutzer  (is_admin gleich mit anlegen)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS nutzer (
-                id        INTEGER PRIMARY KEY AUTOINCREMENT,
-                username  TEXT UNIQUE NOT NULL,
-                passwort  TEXT         NOT NULL,
-                is_admin  INTEGER      DEFAULT 0
-            );
-        """)
-
-        # ➜ Falls die Spalte in älteren DB-Versionen fehlt: nachrüsten
-        try:
-            conn.execute("ALTER TABLE nutzer ADD COLUMN is_admin INTEGER DEFAULT 0;")
-        except sqlite3.OperationalError:
-            pass   # Spalte existiert bereits
-
-init_db()
-
-# ──────────────────────────────────────────────────────────────
-# Hilfsfunktionen
-# ──────────────────────────────────────────────────────────────
-def add_user(username: str, plaintext_password: str, is_admin: int = 0) -> None:
-    """Lokale Utility-Funktion, um per Shell schnell einen Nutzer anzulegen."""
-    pw_hash = generate_password_hash(plaintext_password)
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute(
-            "INSERT OR IGNORE INTO nutzer (username, passwort, is_admin) VALUES (?, ?, ?)",
-            (username, pw_hash, is_admin)
-        )
-    print(f"User '{username}' angelegt (Admin={is_admin}).")
-
-def current_user_role() -> tuple[str | None, bool]:
-    """Liefert (username, is_admin) aus der Session/DB zurück."""
+# ——— Hilfsfunktionen ———
+def current_user_role():
     username = session.get("user")
     if not username:
         return None, False
-    with sqlite3.connect(DB_PATH) as conn:
-        row = conn.execute("SELECT is_admin FROM nutzer WHERE username = ?", (username,)).fetchone()
-    return username, bool(row and row[0] == 1)
+    with engine.begin() as conn:
+        result = conn.execute(text(
+            "SELECT is_admin FROM nutzer WHERE username = :u"
+        ), {"u": username}).fetchone()
+    return username, bool(result and result[0] == 1)
 
-# ──────────────────────────────────────────────────────────────
-# Routen
-# ──────────────────────────────────────────────────────────────
+# ——— Routen ———
 @app.route('/')
 def index():
     username, is_admin = current_user_role()
-
-    with sqlite3.connect(DB_PATH) as conn:
-        zeiten = conn.execute(
+    with engine.begin() as conn:
+        zeiten = conn.execute(text(
             "SELECT name, zeit, datum FROM zeiten ORDER BY zeit ASC"
-        ).fetchall()
-
+        )).fetchall()
     return render_template("index.html", zeiten=zeiten, user=username, admin=is_admin)
 
 
@@ -85,16 +53,13 @@ def index():
 def add():
     if 'user' not in session:
         return redirect('/login')
-
-    name  = request.form['name']
-    zeit  = request.form['zeit']
+    name = request.form['name']
+    zeit = request.form['zeit']
     datum = request.form['datum']
-
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute(
-            "INSERT INTO zeiten (name, zeit, datum) VALUES (?, ?, ?)",
-            (name, zeit, datum)
-        )
+    with engine.begin() as conn:
+        conn.execute(text(
+            "INSERT INTO zeiten (name, zeit, datum) VALUES (:n, :z, :d)"
+        ), {"n": name, "z": zeit, "d": datum})
     return redirect('/')
 
 
@@ -104,18 +69,15 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-
-        with sqlite3.connect(DB_PATH) as conn:
-            row = conn.execute(
-                "SELECT passwort FROM nutzer WHERE username = ?",
-                (username,)
-            ).fetchone()
+        with engine.begin() as conn:
+            row = conn.execute(text(
+                "SELECT passwort FROM nutzer WHERE username = :u"
+            ), {"u": username}).fetchone()
 
         if row and check_password_hash(row[0], password):
             session['user'] = username
             return redirect('/')
         error = "Login fehlgeschlagen"
-
     return render_template("login.html", error=error)
 
 
@@ -125,20 +87,15 @@ def logout():
     return redirect('/')
 
 
-# ──────────────────────────────────────────────────────────────
-# Admin-Bereich
-# ──────────────────────────────────────────────────────────────
 @app.route('/admin')
 def admin_panel():
     username, is_admin = current_user_role()
     if not is_admin:
         return redirect('/login')
-
-    with sqlite3.connect(DB_PATH) as conn:
-        nutzer_liste = conn.execute(
+    with engine.begin() as conn:
+        nutzer_liste = conn.execute(text(
             "SELECT id, username, is_admin FROM nutzer"
-        ).fetchall()
-
+        )).fetchall()
     return render_template("admin.html", nutzer=nutzer_liste)
 
 
@@ -151,25 +108,29 @@ def admin_add_user():
     username = request.form['username']
     password = request.form['password']
     admin_flag = 1 if request.form.get('is_admin') == 'on' else 0
+    pw_hash = generate_password_hash(password)
 
     try:
-        add_user(username, password, admin_flag)
-    except sqlite3.IntegrityError:
+        with engine.begin() as conn:
+            conn.execute(text("""
+                INSERT INTO nutzer (username, passwort, is_admin)
+                VALUES (:u, :p, :a)
+            """), {"u": username, "p": pw_hash, "a": admin_flag})
+    except Exception:
         return "Benutzername existiert bereits"
 
     return redirect('/admin')
 
 
 @app.route('/admin/delete-user/<int:user_id>', methods=['POST'])
-def admin_delete_user(user_id: int):
+def admin_delete_user(user_id):
     _, is_admin = current_user_role()
     if not is_admin:
         return redirect('/login')
-
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute("DELETE FROM nutzer WHERE id = ?", (user_id,))
-        conn.commit()
+    with engine.begin() as conn:
+        conn.execute(text("DELETE FROM nutzer WHERE id = :id"), {"id": user_id})
     return redirect('/admin')
+
 
 if __name__ == "__main__":
     app.run(debug=True)
