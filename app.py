@@ -26,9 +26,14 @@ def init_db() -> None:
                 id     SERIAL PRIMARY KEY,
                 name   TEXT NOT NULL,
                 zeit   TEXT NOT NULL,
-                datum  DATE NOT NULL
+                datum  DATE NOT NULL,
+                user   TEXT
             );
         """))
+        try:
+            conn.execute(text("ALTER TABLE zeiten ADD COLUMN user TEXT;"))
+        except Exception:
+            pass
 init_db()
 
 # ── Hilfsfunktionen ─────────────────────────────────────────────────
