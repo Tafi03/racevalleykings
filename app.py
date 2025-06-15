@@ -27,9 +27,10 @@ def init_db() -> None:
                 name   TEXT NOT NULL,
                 zeit   TEXT NOT NULL,
                 datum  DATE NOT NULL,
-                user   TEXT
+                "user"   TEXT
             );
         """))
+
         try:
             conn.execute(text("ALTER TABLE zeiten ADD COLUMN user TEXT;"))
         except Exception:
