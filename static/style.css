@@ -102,7 +102,6 @@ button:hover {
     font-weight: bold;
 }
 
-/* --- Vertikaler Lauftext (Initial D Style) --------------------------- */
 .scroll-text {
     position: fixed;
     top: 0;
@@ -111,14 +110,23 @@ button:hover {
     overflow: hidden;
     z-index: -1;
     pointer-events: none;
-    opacity: 0.4;
+    opacity: 0.5;
 }
 
 .scroll-text.left  { left: 40px; }
 .scroll-text.right { right: 40px; }
 
+.scroll-track {
+    display: flex;
+    flex-direction: column;
+    animation: scroll-loop 15s linear infinite;
+}
+
+.scroll-text.left .scroll-track {
+    transform: rotate(180deg); /* Scroll von unten nach oben */
+}
+
 .scroll-content {
-    display: inline-block;
     writing-mode: vertical-rl;
     font-family: 'Noto Sans JP', sans-serif;
     font-size: 80px;
@@ -128,28 +136,11 @@ button:hover {
     line-height: 1.4;
 }
 
-/* ── Scroll-Effekte ─────────────────────────────────────────────────── */
-
-/* Links: von unten nach oben */
-.scroll-text.left .scroll-content {
-    animation: scroll-up-loop 20s linear infinite;
-    transform: rotate(180deg);
+@keyframes scroll-loop {
+    0%   { transform: translateY(0); }
+    100% { transform: translateY(-50%); }
 }
 
-/* Rechts: von oben nach unten */
-.scroll-text.right .scroll-content {
-    animation: scroll-down-loop 20s linear infinite;
-}
-
-@keyframes scroll-up-loop {
-    0%   { transform: translateY(100%) rotate(180deg); }
-    100% { transform: translateY(-100%) rotate(180deg); }
-}
-
-@keyframes scroll-down-loop {
-    0%   { transform: translateY(-100%); }
-    100% { transform: translateY(100%); }
-}
 
 /* ── Navbar ──────────────────────────────────────── */
 .topnav {
