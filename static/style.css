@@ -96,6 +96,17 @@ button:hover {
     background: #ffdd00;
 }
 
+.login-form input,
+.login-form button {
+    width: 100%;
+    display: block;
+    box-sizing: border-box;
+}
+
+* {
+    box-sizing: border-box;
+}
+
 .error {
     color: #f66;
     margin-bottom: 1em;
