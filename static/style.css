@@ -102,6 +102,7 @@ button:hover {
     font-weight: bold;
 }
 
+/* --- Vertikaler Lauftext (Initial D Stil) ------------------------ */
 .scroll-text {
     position: fixed;
     top: 0;
@@ -113,34 +114,40 @@ button:hover {
     opacity: 0.5;
 }
 
-.scroll-text.left  { left: 40px; }
-.scroll-text.right { right: 40px; }
+.scroll-text.left  { left: 5vw; }
+.scroll-text.right { right: 5vw; }
 
 .scroll-track {
     display: flex;
     flex-direction: column;
-    animation: scroll-loop 15s linear infinite;
+    animation: scroll-up 20s linear infinite;
 }
 
-.scroll-text.left .scroll-track {
-    transform: rotate(180deg); /* Scroll von unten nach oben */
+.scroll-track.reverse {
+    animation: scroll-down 20s linear infinite;
 }
 
 .scroll-content {
     writing-mode: vertical-rl;
     font-family: 'Noto Sans JP', sans-serif;
-    font-size: 80px;
+    font-size: 90px;
     color: white;
     text-shadow: 0 0 5px white;
     white-space: nowrap;
     line-height: 1.4;
 }
 
-@keyframes scroll-loop {
+/* Scroll nach oben (links) */
+@keyframes scroll-up {
     0%   { transform: translateY(0); }
     100% { transform: translateY(-50%); }
 }
 
+/* Scroll nach unten (rechts) */
+@keyframes scroll-down {
+    0%   { transform: translateY(-50%); }
+    100% { transform: translateY(0); }
+}
 
 /* ── Navbar ──────────────────────────────────────── */
 .topnav {
