@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Admin-Panel</title>
+</head>
+<body>
+    <button id="theme-toggle">🌙</button>
+
+    <h1>👑 Admin-Bereich</h1>
+
+    <h2>Neuen Benutzer hinzufügen</h2>
+    <form action="/admin/add-user" method="POST">
+        <input name="username" placeholder="Benutzername" required>
+        <input type="password" name="password" placeholder="Passwort" required>
+        <label><input type="checkbox" name="is_admin"> Admin?</label>
+        <button type="submit">Hinzufügen</button>
+    </form>
+
+    <h2>Alle Benutzer</h2>
+    <table border="1">
+        <thead><tr><th>ID</th><th>Name</th><th>Admin</th><th>Aktion</th></tr></thead>
+        <tbody>
+            {% for id, name, is_admin in nutzer %}
+            <tr>
+                <td>{{ id }}</td>
+                <td>{{ name }}</td>
+                <td>{{ '✅' if is_admin else '❌' }}</td>
+                <td>
+                    {% if name != session['user'] %}
+                    <form method="POST" action="/admin/delete-user/{{ id }}">
+                        <button type="submit">Löschen</button>
+                    </form>
+                    {% else %}
+                    (du selbst)
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p><a href="/">Zurück zur Startseite</a></p>
+<script>
+    const toggleBtn = document.getElementById('theme-toggle');
+    const body = document.body;
+
+    // Standard = Dunkelmodus, wenn keine Einstellung gespeichert ist
+    const userPref = localStorage.getItem('darkMode');
+    if (userPref === null || userPref === 'true') {
+        body.classList.add('dark-mode');
+        toggleBtn.textContent = '☀️';
+        localStorage.setItem('darkMode', 'true'); // optional: einmal speichern
+    } else {
+        toggleBtn.textContent = '🌙';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        const dark = body.classList.contains('dark-mode');
+        toggleBtn.textContent = dark ? '☀️' : '🌙';
+        localStorage.setItem('darkMode', dark);
+    });
+</script>
+</body>
+</html>

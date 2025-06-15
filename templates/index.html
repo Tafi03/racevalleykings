@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Rennzeiten</title>
+</head>
+<body>
+    {% if user %}
+        <p>Eingeloggt als {{ user }} – <a href="/logout">Logout</a></p>
+
+        {% if admin %}
+            <p><a href="/admin">👑 Admin-Panel</a></p>
+        {% endif %}
+
+        <form action="/add" method="POST">
+            <input type="text" name="name" placeholder="Name" required>
+            <input type="time" name="zeit" step="0.01" required>
+            <input type="date" name="datum" required>
+            <button type="submit">Hochladen</button>
+        </form>
+    {% else %}
+        <p><a href="/login">Login</a>, um Zeiten hochzuladen.</p>
+    {% endif %}
+    <button id="theme-toggle">🌙</button>
+
+    <h1>🏁 Heimstrecken-Bestzeiten</h1>
+
+    <h2>Rangliste</h2>
+    <table border="1">
+        <thead>
+            <tr><th>Name</th><th>Zeit</th><th>Datum</th></tr>
+        </thead>
+        <tbody>
+            {% for name, zeit, datum in zeiten %}
+            <tr>
+                <td>{{ name }}</td>
+                <td>{{ zeit }}</td>
+                <td>{{ datum }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+<script>
+    const toggleBtn = document.getElementById('theme-toggle');
+    const body = document.body;
+
+    // Standard = Dunkelmodus, wenn keine Einstellung gespeichert ist
+    const userPref = localStorage.getItem('darkMode');
+    if (userPref === null || userPref === 'true') {
+        body.classList.add('dark-mode');
+        toggleBtn.textContent = '☀️';
+        localStorage.setItem('darkMode', 'true'); // optional: einmal speichern
+    } else {
+        toggleBtn.textContent = '🌙';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        const dark = body.classList.contains('dark-mode');
+        toggleBtn.textContent = dark ? '☀️' : '🌙';
+        localStorage.setItem('darkMode', dark);
+    });
+</script>
+</body>
+</html>
