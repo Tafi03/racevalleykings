@@ -2,41 +2,24 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="/static/style.css">
-    <title>Login</title>
+    <title>Login – Race Valley Kings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
+<body class="dark">
     <button id="theme-toggle">🌙</button>
-    <h1>🔐 Login</h1>
-    {% if error %}
-        <p style="color:red;">{{ error }}</p>
-    {% endif %}
-    <form method="POST">
-        <input name="username" placeholder="Benutzername" required>
-        <input name="password" type="password" placeholder="Passwort" required>
-        <button type="submit">Einloggen</button>
-    </form>
-    <p><a href="/">Zurück</a></p>
-<script>
-    const toggleBtn = document.getElementById('theme-toggle');
-    const body = document.body;
 
-    // Standard = Dunkelmodus, wenn keine Einstellung gespeichert ist
-    const userPref = localStorage.getItem('darkMode');
-    if (userPref === null || userPref === 'true') {
-        body.classList.add('dark-mode');
-        toggleBtn.textContent = '☀️';
-        localStorage.setItem('darkMode', 'true'); // optional: einmal speichern
-    } else {
-        toggleBtn.textContent = '🌙';
-    }
+    <div class="login-container">
+        <h1>🏁 Login</h1>
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+        <form method="POST">
+            <input name="username" placeholder="Benutzername" required>
+            <input name="password" type="password" placeholder="Passwort" required>
+            <button type="submit">Einloggen</button>
+        </form>
+    </div>
 
-    toggleBtn.addEventListener('click', () => {
-        body.classList.toggle('dark-mode');
-        const dark = body.classList.contains('dark-mode');
-        toggleBtn.textContent = dark ? '☀️' : '🌙';
-        localStorage.setItem('darkMode', dark);
-    });
-</script>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
 </body>
 </html>

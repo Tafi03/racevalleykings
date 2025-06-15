@@ -2,16 +2,21 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="/static/style.css">
-    <title>Admin-Panel</title>
+    <title>Admin – Race Valley Kings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <button id="theme-toggle">🌙</button>
 
-    <h1>👑 Admin-Bereich</h1>
+    <nav class="topnav">
+        <span class="brand">👑 Admin-Panel</span>
+        <span class="spacer"></span>
+        <a href="/zeiten">Zeiten</a>
+        <a href="/logout">Logout</a>
+    </nav>
 
-    <h2>Neuen Benutzer hinzufügen</h2>
-    <form action="/admin/add-user" method="POST">
+    <h2>Benutzer hinzufügen</h2>
+    <form action="/admin/add-user" method="POST" class="user-form">
         <input name="username" placeholder="Benutzername" required>
         <input type="password" name="password" placeholder="Passwort" required>
         <label><input type="checkbox" name="is_admin"> Admin?</label>
@@ -19,7 +24,7 @@
     </form>
 
     <h2>Alle Benutzer</h2>
-    <table border="1">
+    <table>
         <thead><tr><th>ID</th><th>Name</th><th>Admin</th><th>Aktion</th></tr></thead>
         <tbody>
             {% for id, name, is_admin in nutzer %}
@@ -28,40 +33,17 @@
                 <td>{{ name }}</td>
                 <td>{{ '✅' if is_admin else '❌' }}</td>
                 <td>
-                    {% if name != session['user'] %}
-                    <form method="POST" action="/admin/delete-user/{{ id }}">
+                    {% if name != user %}
+                    <form action="/admin/delete-user/{{ id }}" method="POST">
                         <button type="submit">Löschen</button>
                     </form>
-                    {% else %}
-                    (du selbst)
-                    {% endif %}
+                    {% else %}(du){% endif %}
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <p><a href="/">Zurück zur Startseite</a></p>
-<script>
-    const toggleBtn = document.getElementById('theme-toggle');
-    const body = document.body;
-
-    // Standard = Dunkelmodus, wenn keine Einstellung gespeichert ist
-    const userPref = localStorage.getItem('darkMode');
-    if (userPref === null || userPref === 'true') {
-        body.classList.add('dark-mode');
-        toggleBtn.textContent = '☀️';
-        localStorage.setItem('darkMode', 'true'); // optional: einmal speichern
-    } else {
-        toggleBtn.textContent = '🌙';
-    }
-
-    toggleBtn.addEventListener('click', () => {
-        body.classList.toggle('dark-mode');
-        const dark = body.classList.contains('dark-mode');
-        toggleBtn.textContent = dark ? '☀️' : '🌙';
-        localStorage.setItem('darkMode', dark);
-    });
-</script>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
 </body>
 </html>

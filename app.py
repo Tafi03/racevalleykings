@@ -3,19 +3,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import create_engine, text
 import os
 
-# ───────────────────────────
-# Grundkonfiguration
-# ───────────────────────────
+# ── Flask-Grundkonfiguration ──────────────────────────────────────────
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")  # ✔ ENV‑Variable auf Render setzen!
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")      # in Render setzen!
 
-DATABASE_URL = os.environ["DATABASE_URL"]  # kommt aus Render‑Postgres
+DATABASE_URL = os.environ["DATABASE_URL"]                        # Render-Postgres
 engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
 
-# ───────────────────────────
-# DB‑Schema initialisieren
-# ───────────────────────────
-
+# ── Datenbank-Schema einmalig anlegen ────────────────────────────────
 def init_db() -> None:
     with engine.begin() as conn:
         conn.execute(text("""
@@ -34,29 +29,46 @@ def init_db() -> None:
                 datum  DATE NOT NULL
             );
         """))
-
 init_db()
 
-# ───────────────────────────
-# Hilfsfunktionen
-# ───────────────────────────
-
+# ── Hilfsfunktionen ─────────────────────────────────────────────────
 def current_user_role():
     user = session.get("user")
     if not user:
         return None, False
     with engine.begin() as conn:
         row = conn.execute(
-            text("SELECT is_admin FROM nutzer WHERE username = :u"), {"u": user}
+            text("SELECT is_admin FROM nutzer WHERE username = :u"),
+            {"u": user}
         ).fetchone()
     return user, bool(row and row[0])
 
-# ───────────────────────────
-# Routen
-# ───────────────────────────
+def add_user(username: str, password_plain: str, is_admin: bool = False):
+    pw_hash = generate_password_hash(password_plain)
+    with engine.begin() as conn:
+        conn.execute(
+            text("""
+                INSERT INTO nutzer (username, passwort, is_admin)
+                VALUES (:u, :p, :a)
+                ON CONFLICT (username) DO NOTHING
+            """),
+            {"u": username, "p": pw_hash, "a": is_admin}
+        )
 
+# ── Routen ──────────────────────────────────────────────────────────
 @app.route('/')
-def index():
+def root():
+    """Start: immer erst zur Login-Seite – außer man ist eingeloggt."""
+    if 'user' in session:
+        return redirect('/zeiten')
+    return redirect('/login')
+
+@app.route('/zeiten')
+def zeiten():
+    """Hauptseite (Rangliste) – nur für eingeloggte User."""
+    if 'user' not in session:
+        return redirect('/login')
+
     user, admin = current_user_role()
     with engine.begin() as conn:
         zeiten = conn.execute(
@@ -64,21 +76,19 @@ def index():
         ).all()
     return render_template("index.html", zeiten=zeiten, user=user, admin=admin)
 
-
 @app.route('/add', methods=['POST'])
 def add():
     if 'user' not in session:
         return redirect('/login')
-    name = request.form['name']
-    zeit = request.form['zeit']
+    name  = request.form['name']
+    zeit  = request.form['zeit']
     datum = request.form['datum']
     with engine.begin() as conn:
         conn.execute(
             text("INSERT INTO zeiten (name, zeit, datum) VALUES (:n, :z, :d)"),
             {"n": name, "z": zeit, "d": datum}
         )
-    return redirect('/')
-
+    return redirect('/zeiten')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -93,59 +103,48 @@ def login():
             ).fetchone()
         if row and check_password_hash(row[0], password):
             session['user'] = username
-            return redirect('/')
+            return redirect('/zeiten')
         error = "Login fehlgeschlagen"
     return render_template("login.html", error=error)
-
 
 @app.route('/logout')
 def logout():
     session.pop('user', None)
-    return redirect('/')
+    return redirect('/login')
 
-
-# ───────────────────────────
-# Admin‑bereich
-# ───────────────────────────
+# ── Admin-Bereich ────────────────────────────────────────────────────
 @app.route('/admin')
 def admin_panel():
-    user, admin = current_user_role()
-    if not admin:
+    user, is_admin = current_user_role()
+    if not is_admin:
         return redirect('/login')
     with engine.begin() as conn:
-        users = conn.execute(text("SELECT id, username, is_admin FROM nutzer")).all()
-    return render_template("admin.html", nutzer=users)
-
+        nutzer = conn.execute(
+            text("SELECT id, username, is_admin FROM nutzer")
+        ).all()
+    return render_template("admin.html", nutzer=nutzer, user=user, admin=True)
 
 @app.route('/admin/add-user', methods=['POST'])
 def admin_add_user():
-    _, admin = current_user_role()
-    if not admin:
+    _, is_admin = current_user_role()
+    if not is_admin:
         return redirect('/login')
-    username = request.form['username']
-    password = request.form['password']
-    is_admin = request.form.get('is_admin') == 'on'
-    pw_hash = generate_password_hash(password)
-    try:
-        with engine.begin() as conn:
-            conn.execute(text("""
-                INSERT INTO nutzer (username, passwort, is_admin)
-                VALUES (:u, :p, :a)
-            """), {"u": username, "p": pw_hash, "a": is_admin})
-    except Exception:
-        return "Benutzername existiert bereits"
-    return redirect('/admin')
 
+    username   = request.form['username']
+    password   = request.form['password']
+    admin_flag = request.form.get('is_admin') == 'on'
+    add_user(username, password, admin_flag)
+    return redirect('/admin')
 
 @app.route('/admin/delete-user/<int:user_id>', methods=['POST'])
 def admin_delete_user(user_id):
-    _, admin = current_user_role()
-    if not admin:
+    _, is_admin = current_user_role()
+    if not is_admin:
         return redirect('/login')
     with engine.begin() as conn:
         conn.execute(text("DELETE FROM nutzer WHERE id = :id"), {"id": user_id})
     return redirect('/admin')
 
-
+# ── Lokalstart ──────────────────────────────────────────────────────
 if __name__ == '__main__':
     app.run(debug=True)

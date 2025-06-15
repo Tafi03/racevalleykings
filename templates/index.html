@@ -2,66 +2,48 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="/static/style.css">
-    <title>Race Valley Kings</title>
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <title>Race Valley Kings 🏁</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
 </head>
 <body>
-    {% if user %}
-        <p>Eingeloggt als {{ user }} <a href="/logout">Logout</a></p>
-
-        {% if admin %}
-            <p><a href="/admin">👑 Admin-Panel</a></p>
-        {% endif %}
-
-        <form action="/add" method="POST">
-            <input type="text" name="name" placeholder="Name" required>
-            <input type="time" name="zeit" step="0.01" required>
-            <input type="date" name="datum" required>
-            <button type="submit">Hochladen</button>
-        </form>
-    {% else %}
-        <p><a href="/login">Login</a>, um Zeiten hochzuladen.</p>
-    {% endif %}
     <button id="theme-toggle">🌙</button>
+
+    {% if user %}
+    <nav class="topnav">
+        <span class="brand">🏁 Race Valley Kings</span>
+        <span class="spacer"></span>
+        <a href="/zeiten">Zeiten</a>
+        {% if admin %}<a href="/admin">Admin</a>{% endif %}
+        <a href="/logout">Logout</a>
+    </nav>
+    {% endif %}
 
     <h1>🏁 Heimstrecken-Bestzeiten</h1>
 
+    <form action="/add" method="POST" class="zeit-form">
+        <input type="text" name="name" placeholder="Name" required>
+        <input type="time" name="zeit" step="0.01" required>
+        <input type="date" name="datum" required>
+        <button type="submit">Hochladen</button>
+    </form>
+
     <h2>Rangliste</h2>
-    <table border="1">
+    <table>
         <thead>
             <tr><th>Name</th><th>Zeit</th><th>Datum</th></tr>
         </thead>
         <tbody>
-            {% for name, zeit, datum in zeiten %}
+            {% for n, z, d in zeiten %}
             <tr>
-                <td>{{ name }}</td>
-                <td>{{ zeit }}</td>
-                <td>{{ datum }}</td>
+                <td>{{ n }}</td>
+                <td>{{ z }}</td>
+                <td>{{ d }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-<script>
-    const toggleBtn = document.getElementById('theme-toggle');
-    const body = document.body;
 
-    // Standard = Dunkelmodus, wenn keine Einstellung gespeichert ist
-    const userPref = localStorage.getItem('darkMode');
-    if (userPref === null || userPref === 'true') {
-        body.classList.add('dark-mode');
-        toggleBtn.textContent = '☀️';
-        localStorage.setItem('darkMode', 'true'); // optional: einmal speichern
-    } else {
-        toggleBtn.textContent = '🌙';
-    }
-
-    toggleBtn.addEventListener('click', () => {
-        body.classList.toggle('dark-mode');
-        const dark = body.classList.contains('dark-mode');
-        toggleBtn.textContent = dark ? '☀️' : '🌙';
-        localStorage.setItem('darkMode', dark);
-    });
-</script>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
 </body>
 </html>
