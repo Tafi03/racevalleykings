@@ -107,7 +107,7 @@ button:hover {
 :root {
   --login-width: 400px;
   --scroll-width: 120px;
-  --scroll-gap: 40px; /* Abstand zur Box */
+  --scroll-gap: 100px; /* Abstand zur Box */
 }
 
 /* Scroll-Container */
@@ -136,10 +136,10 @@ button:hover {
 .track {
   display: flex;
   flex-direction: column;
-  animation: scroll-up 18s linear infinite;
+  animation: scroll-up 30s linear infinite;
 }
 .track.reverse {
-  animation: scroll-down 18s linear infinite;
+  animation: scroll-down 30s linear infinite;
 }
 
 /* Inhalt */
