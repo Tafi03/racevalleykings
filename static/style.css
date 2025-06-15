@@ -102,38 +102,41 @@ button:hover {
     font-weight: bold;
 }
 
-/* --- Vertikaler Lauftext ------------------------------------------------ */
-.scroll-text{
+/* --- Vertikaler Lauftext (Japanisch scrollend) ------------------------- */
+.scroll-text {
     position: fixed;
-    top: 0;
-    bottom: 0;
-    width: 40px;                /* Breite der Spalte */
+    width: 80px;
+    height: 100vh;
     overflow: hidden;
-    pointer-events: none;       /* klickt nicht mit */
-    z-index: -1;                /* hinter Inhalt */
-    opacity: 0.15;              /* dezent */
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.4;
+    padding: 0 10px;
 }
-.scroll-text.left  { left: 0;  }
-.scroll-text.right { right: 0; }
 
-.scroll-text span{
+.scroll-text.left  { left: 0; top: 0; }
+.scroll-text.right { right: 0; top: 0; }
+
+.scroll-text span {
     display: inline-block;
-    writing-mode: vertical-rl;  /* Zeichen von oben nach unten */
-    transform: rotate(180deg);  /* japanisch vertikal korrekt ausrichten */
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
     font-family: 'Noto Sans JP', sans-serif;
-    font-size: 24px;
-    line-height: 1.2;
+    font-size: 36px;
+    color: white;
     white-space: nowrap;
-    animation: scrollY 12s linear infinite;
+    line-height: 1.4;
+    animation: scrollY 25s linear infinite;
 }
 
-@keyframes scrollY{
-    0%   { transform: translateY(100%) rotate(180deg); }
+@keyframes scrollY {
+    0%   { transform: translateY(100vh) rotate(180deg); }
     100% { transform: translateY(-100%) rotate(180deg); }
 }
 
-/* optional dunkler Modus intensiver machen */
-body.dark .scroll-text span{ opacity: 0.25; }
+body.dark .scroll-text span {
+    color: white;
+}
 
 /* ── Navbar ──────────────────────────────────────── */
 .topnav {
