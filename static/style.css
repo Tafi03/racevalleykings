@@ -1,61 +1,144 @@
-/* --- Layout & Darkmode ------------------------------------------------ */
+/* ── Fonts & Grunddesign ─────────────────────────── */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Orbitron', sans-serif;
     margin: 0;
     padding: 80px 20px 40px;
-    background:#f4f4f4;
-    color:#333;
+    background: #0c0c0c;
+    color: #e0e0e0;
 }
+h1, h2 {
+    text-align: center;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 2.5em;
+    letter-spacing: 1px;
+    color: #ffd700;
+}
+
 body.dark {
-    background:#111;
-    color:#eee;
-}
-h1,h2 { text-align:center; }
-table { width:100%; border-collapse:collapse; margin-top:20px; }
-table th,table td { border:1px solid #444; padding:10px; text-align:center; }
-table th { background:#ececec; }
-body.dark table th { background:#333; }
-input,button { padding:10px; border-radius:8px; border:1px solid #888; }
-button { background:#007bff; color:#fff; cursor:pointer; }
-button:hover { background:#0056b3; }
-
-/* --- Login-Box -------------------------------------------------------- */
-.login-container{
-    max-width:400px;margin:10vh auto;padding:2em;background:#1e1e1e;
-    border-radius:12px;box-shadow:0 0 15px #000;text-align:center;
-}
-.login-container input{background:#333;color:#eee;border:none;margin-top: 10px;}
-.login-container button{background:gold;color:#000;border:none;margin-top: 20px;}
-.error{color:#f66;margin-bottom:1em;}
-
-/* --- Navbar ----------------------------------------------------------- */
-.topnav{
-    position:fixed;top:0;left:0;right:0;height:50px;
-    background:#222;color:#eee;display:flex;align-items:center;
-    gap:1em;padding:0 20px;box-shadow:0 2px 6px rgba(0,0,0,.4);
-    z-index:999;
-}
-.topnav a{color:gold;text-decoration:none;font-weight:bold;}
-.brand{font-weight:bold;}
-.spacer{flex-grow:1;}
-
-/* Darkmode overrides */
-body.dark .topnav{background:#000;}
-body.dark table td{background:#222;}
-body.dark input,body.dark button{background:#333;color:#eee;border:1px solid #555;}
-body.dark button:hover{background:#444;}
-
-.topnav .theme-btn{
-    background:none;
-    border:none;
-    font-size:20px;
-    margin-left:1rem;
-    cursor:pointer;
-    color:gold;
+    background: #0c0c0c;
+    color: #eee;
 }
 
-table button{
-  padding:4px 8px;font-size:13px;background:#d9534f;color:#fff;
-  border:none;border-radius:6px;cursor:pointer;
+/* ── Tabellen ────────────────────────────────────── */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
 }
-table button:hover{background:#c9302c;}
+table th, table td {
+    border: 1px solid #444;
+    padding: 10px;
+    text-align: center;
+}
+table th {
+    background: #222;
+    color: #ffc107;
+    font-family: 'Bebas Neue', cursive;
+}
+body.dark table td {
+    background: #121212;
+    color: #f0f0f0;
+}
+
+/* ── Formular ─────────────────────────────────────── */
+input, button {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #888;
+    font-family: 'Orbitron', sans-serif;
+}
+button {
+    background: #d90000;
+    color: #fff;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+button:hover {
+    background: #a80000;
+}
+
+/* ── Login-Box ────────────────────────────────────── */
+.login-container {
+    max-width: 400px;
+    margin: 10vh auto;
+    padding: 2em;
+    background: #1a1a1a;
+    border-radius: 12px;
+    box-shadow: 0 0 15px #000;
+    text-align: center;
+}
+.login-container input {
+    background: #222;
+    color: #eee;
+    border: none;
+    margin-top: 10px;
+}
+.login-container button {
+    background: #ffd700;
+    color: #000;
+    border: none;
+    margin-top: 20px;
+}
+.error {
+    color: #f66;
+    margin-bottom: 1em;
+}
+
+/* ── Navbar ──────────────────────────────────────── */
+.topnav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: #000;
+    color: #eee;
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    padding: 0 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.4);
+    z-index: 999;
+}
+.topnav a {
+    color: #ffd700;
+    text-decoration: none;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+.topnav a:hover {
+    text-decoration: underline;
+}
+.brand {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 14px;
+    color: #0ff;
+    text-shadow: 0 0 3px #0ff;
+}
+.spacer {
+    flex-grow: 1;
+}
+
+/* ── Darkmode-Toggle ─────────────────────────────── */
+.topnav .theme-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    margin-left: 1rem;
+    cursor: pointer;
+    color: #ffd700;
+}
+
+/* ── Button in Tabelle ───────────────────────────── */
+table button {
+    padding: 4px 8px;
+    font-size: 13px;
+    background: #d9534f;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+table button:hover {
+    background: #c9302c;
+}
