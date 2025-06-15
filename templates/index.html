@@ -7,8 +7,6 @@
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
 </head>
 <body>
-    <button id="theme-toggle">🌙</button>
-
     {% if user %}
     <nav class="topnav">
         <span class="brand">🏁 Race Valley Kings</span>
@@ -16,6 +14,7 @@
         <a href="/zeiten">Zeiten</a>
         {% if admin %}<a href="/admin">Admin</a>{% endif %}
         <a href="/logout">Logout</a>
+        <button id="theme-toggle" class="theme-btn">🌙</button>
     </nav>
     {% endif %}
 

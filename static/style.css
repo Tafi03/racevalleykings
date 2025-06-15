@@ -24,8 +24,8 @@ button:hover { background:#0056b3; }
     max-width:400px;margin:10vh auto;padding:2em;background:#1e1e1e;
     border-radius:12px;box-shadow:0 0 15px #000;text-align:center;
 }
-.login-container input{background:#333;color:#eee;border:none;}
-.login-container button{background:gold;color:#000;border:none;}
+.login-container input{background:#333;color:#eee;border:none;margin-top: 10px;}
+.login-container button{background:gold;color:#000;border:none;margin-top: 20px;}
 .error{color:#f66;margin-bottom:1em;}
 
 /* --- Navbar ----------------------------------------------------------- */
@@ -45,8 +45,11 @@ body.dark table td{background:#222;}
 body.dark input,body.dark button{background:#333;color:#eee;border:1px solid #555;}
 body.dark button:hover{background:#444;}
 
-/* Theme toggle button */
-#theme-toggle{
-    position:fixed;top:12px;right:20px;font-size:20px;background:none;
-    border:none;color:gold;cursor:pointer;z-index:1000;
+.topnav .theme-btn{
+    background:none;
+    border:none;
+    font-size:20px;
+    margin-left:1rem;
+    cursor:pointer;
+    color:gold;
 }
