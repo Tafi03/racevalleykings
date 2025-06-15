@@ -151,3 +151,15 @@ def admin_delete_user(user_id):
         conn.execute("DELETE FROM nutzer WHERE id = ?", (user_id,))
         conn.commit()
     return redirect('/admin')
+
+import os
+from werkzeug.security import generate_password_hash
+
+if os.environ.get("FLASK_ENV") == "production":
+    with sqlite3.connect("zeiten.db") as conn:
+        conn.execute("""
+            INSERT OR IGNORE INTO nutzer (username, passwort, is_admin)
+            VALUES (?, ?, ?)
+        """, (
+            "admin", generate_password_hash("beEnte21"), 1
+        ))
