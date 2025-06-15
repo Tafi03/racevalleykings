@@ -104,54 +104,68 @@ button:hover {
 
 /* === Vertikaler Lauftext (Initial-D-Style) =========================== */
 
-/*  Breite deiner Login-Box als Variable (gleiche Zahl wie .login-container)  */
-:root{ --login-width: 400px; }
-
-/*  Basis-Container left / right  */
-.scroll-text{
-    position:fixed;
-    top:0;
-    height:100vh;
-    width:120px;                    /* Streifenbreite */
-    overflow:hidden;
-    pointer-events:none;
-    z-index:-1;
-    opacity:.45;
+:root {
+  --login-width: 400px;
+  --scroll-width: 120px;
+  --scroll-gap: 40px; /* Abstand zur Box */
 }
 
-.scroll-text.left  { left : calc((100vw - var(--login-width))/2 - 140px); }
-.scroll-text.right { right: calc((100vw - var(--login-width))/2 - 140px); }
-
-/*  Track bewegt sich – zwei Inhalte → 200 % Höhe  */
-.track{
-    display:flex;
-    flex-direction:column;
-    animation:scroll-up 18s linear infinite;
-}
-.track.reverse{ animation:scroll-down 18s linear infinite; }
-
-/*  Inhalt: japanischer Text  */
-.scroll-content{
-    writing-mode:vertical-rl;
-    font-family:'Noto Sans JP',sans-serif;
-    font-size:90px;
-    line-height:1.4;
-    white-space:nowrap;
-    color:#fff;
-    text-shadow:0 0 6px #fff;
+/* Scroll-Container */
+.scroll-text {
+  position: fixed;
+  top: 0;
+  height: 100vh;
+  width: var(--scroll-width);
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.45;
 }
 
-/*  LINKS: unten → oben (Text drehen, damit richtig lesbar)  */
-.scroll-text.left .scroll-content{ transform:rotate(180deg); }
-
-/*  KEYFRAMES: genau 100 % der Track-Höhe (eine Hälfte)  */
-@keyframes scroll-up{
-  0%   { transform:translateY(0); }
-  100% { transform:translateY(-50%); }   /*   -50 %  =  eine Spurhöhe   */
+/* Links: links vom Login, mit Lücke */
+.scroll-text.left {
+  left: calc((100vw - var(--login-width)) / 2 - var(--scroll-width) - var(--scroll-gap));
 }
-@keyframes scroll-down{
-  0%   { transform:translateY(-50%); }
-  100% { transform:translateY(0); }
+
+/* Rechts: rechts vom Login, mit Lücke */
+.scroll-text.right {
+  right: calc((100vw - var(--login-width)) / 2 - var(--scroll-width) - var(--scroll-gap));
+}
+
+/* Track: 2x Inhalte = 200% → loopbar */
+.track {
+  display: flex;
+  flex-direction: column;
+  animation: scroll-up 18s linear infinite;
+}
+.track.reverse {
+  animation: scroll-down 18s linear infinite;
+}
+
+/* Inhalt */
+.scroll-content {
+  writing-mode: vertical-rl;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 90px;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: white;
+  text-shadow: 0 0 6px white;
+}
+
+/* Linkstext: gedreht */
+.scroll-text.left .scroll-content {
+  transform: rotate(180deg);
+}
+
+/* Animations */
+@keyframes scroll-up {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+@keyframes scroll-down {
+  0%   { transform: translateY(-50%); }
+  100% { transform: translateY(0); }
 }
 
 /* ── Navbar ──────────────────────────────────────── */
