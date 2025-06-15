@@ -105,47 +105,47 @@ button:hover {
 /* --- Vertikaler Lauftext (Japanisch scrollend) ------------------------- */
 .scroll-text {
     position: fixed;
-    width: 120px;
+    top: 0;
     height: 100vh;
+    width: 120px;           /* Platz für große Zeichen */
     overflow: hidden;
     z-index: -1;
     pointer-events: none;
     opacity: 0.4;
-    padding: 0 10px;
 }
 
-.scroll-text.left {
-    left: 0;
-    padding-left: 20px;
-}
-
-.scroll-text.right {
-    right: 0;
-    padding-right: 20px;
-}
+.scroll-text.left  { left: 0;  padding-left: 20px; }
+.scroll-text.right { right: 0; padding-right: 20px; }
 
 .scroll-text span {
     display: inline-block;
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
+    writing-mode: vertical-rl;  /* vertikal */
     font-family: 'Noto Sans JP', sans-serif;
     font-size: 60px;
     color: white;
     text-shadow: 0 0 5px white;
     white-space: nowrap;
     line-height: 1.4;
-    animation: scrollY 25s linear infinite;
 }
 
-@keyframes scrollY {
+/* ── Links: text läuft nach oben ─────────────────────────────────────── */
+.scroll-text.left span {
+    transform: rotate(180deg);
+    animation: scroll-up 25s linear infinite;
+}
+@keyframes scroll-up {
     0%   { transform: translateY(100vh) rotate(180deg); }
-    100% { transform: translateY(-100%) rotate(180deg); }
+    100% { transform: translateY(-100%)  rotate(180deg); }
 }
 
-body.dark .scroll-text span {
-    color: white;
+/* ── Rechts: text läuft nach unten ───────────────────────────────────── */
+.scroll-text.right span {
+    animation: scroll-down 25s linear infinite;
 }
-
+@keyframes scroll-down {
+    0%   { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+}
 /* ── Navbar ──────────────────────────────────────── */
 .topnav {
     position: fixed;
