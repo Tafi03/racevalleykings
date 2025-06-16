@@ -285,3 +285,25 @@ table button:hover {
         margin-bottom: 10px;
     }
 }
+
+/* ── Standard (Mobile & Tablet) ▸ Titel läuft im Flex-Flow mit ───────── */
+.brand-jp{
+    font-family:'Noto Sans JP','Orbitron',sans-serif;
+    font-size:1.2rem;
+    letter-spacing:2px;
+    margin:0 auto;          /* zentriert im Flex-Container */
+    text-align:center;
+    flex-grow:1;            /* nimmt den Freiraum ein */
+}
+
+/* ── Desktop ≥ 601 px ▸ absolut exakt mittig ─────────────────────────── */
+@media (min-width:601px){
+  .brand-jp{
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      margin:0;             /* margin-auto entfernen */
+      flex-grow:0;          /* kein Flex-Wachstum nötig */
+  }
+}
+
