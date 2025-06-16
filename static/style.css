@@ -307,3 +307,18 @@ table button:hover {
   }
 }
 
+
+/* Logo in Login-Box ----------------------------------------------- */
+.rvk-logo{
+    width: 220px;           /* Desktop-Breite */
+    max-width: 85%;
+    height: auto;
+    margin-bottom: 15px;
+}
+
+/* Mobile kleiner skalieren */
+@media (max-width:600px){
+  .rvk-logo{
+      width: 160px;
+  }
+}
