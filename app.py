@@ -176,3 +176,33 @@ def admin_delete_user(user_id):
 # ── Lokalstart ───────────────────────────────────────────────────────
 if __name__ == '__main__':
     app.run(debug=True)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    error = None
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        if not username or not password:
+            error = "Bitte Benutzername und Passwort angeben."
+        else:
+            with engine.begin() as conn:
+                user_exists = conn.execute(
+                    text("SELECT 1 FROM nutzer WHERE username = :u"),
+                    {"u": username}
+                ).fetchone()
+                if user_exists:
+                    error = "Benutzername existiert bereits."
+                else:
+                    pw_hash = generate_password_hash(password)
+                    conn.execute(
+                        text("""
+                            INSERT INTO nutzer (username, passwort)
+                            VALUES (:u, :p)
+                        """),
+                        {"u": username, "p": pw_hash}
+                    )
+                    session['user'] = username
+                    return redirect('/zeiten')
+    return render_template("register.html", error=error)
