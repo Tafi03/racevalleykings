@@ -6,16 +6,13 @@ body {
     background: #0c0c0c;
     color: #e0e0e0;
 }
-
-h1,
-h2 {
+h1, h2 {
     text-align: center;
     font-family: 'Bebas Neue', cursive;
     font-size: 2.5em;
     letter-spacing: 1px;
     color: #ffd700;
 }
-
 body.dark {
     background: #0c0c0c;
     color: #eee;
@@ -27,41 +24,34 @@ table {
     border-collapse: collapse;
     margin-top: 20px;
 }
-
-table th,
-table td {
+table th, table td {
     border: 1px solid #444;
     padding: 10px;
     text-align: center;
 }
-
 table th {
     background: #222;
     color: #ffc107;
     font-family: 'Bebas Neue', cursive;
 }
-
 body.dark table td {
     background: #121212;
     color: #f0f0f0;
 }
 
 /* ── Formular ─────────────────────────────────────── */
-input,
-button {
+input, button {
     padding: 10px;
     border-radius: 8px;
     border: 1px solid #888;
     font-family: 'Orbitron', sans-serif;
 }
-
 button {
     background: #d90000;
     color: #fff;
     cursor: pointer;
     text-transform: uppercase;
 }
-
 button:hover {
     background: #a80000;
 }
@@ -75,8 +65,9 @@ button:hover {
     border-radius: 12px;
     box-shadow: 0 0 15px #000;
     text-align: center;
+    position: relative;
+    z-index: 1;
 }
-
 .login-form input {
     width: 100%;
     padding: 10px;
@@ -87,7 +78,6 @@ button:hover {
     background: #333;
     color: #eee;
 }
-
 .login-form button {
     width: 100%;
     margin-top: 20px;
@@ -100,22 +90,18 @@ button:hover {
     border-radius: 6px;
     cursor: pointer;
 }
-
 .login-form button:hover {
     background: #ffdd00;
 }
-
 .login-form input,
 .login-form button {
     width: 100%;
     display: block;
     box-sizing: border-box;
 }
-
 * {
     box-sizing: border-box;
 }
-
 .error {
     color: #f66;
     margin-bottom: 1em;
@@ -123,15 +109,11 @@ button:hover {
 }
 
 /* === Vertikaler Lauftext (Initial-D-Style) =========================== */
-
 :root {
     --login-width: 400px;
     --scroll-width: 120px;
     --scroll-gap: 100px;
-    /* Abstand zur Box */
 }
-
-/* Scroll-Container */
 .scroll-text {
     position: fixed;
     top: 0;
@@ -139,32 +121,23 @@ button:hover {
     width: var(--scroll-width);
     overflow: hidden;
     pointer-events: none;
-    z-index: -1;
+    z-index: 0;
     opacity: 0.45;
 }
-
-/* Links: links vom Login, mit Lücke */
 .scroll-text.left {
     left: calc((100vw - var(--login-width)) / 2 - var(--scroll-width) - var(--scroll-gap));
 }
-
-/* Rechts: rechts vom Login, mit Lücke */
 .scroll-text.right {
     right: calc((100vw - var(--login-width)) / 2 - var(--scroll-width) - var(--scroll-gap));
 }
-
-/* Track: 2x Inhalte = 200% → loopbar */
 .track {
     display: flex;
     flex-direction: column;
     animation: scroll-up 30s linear infinite;
 }
-
 .track.reverse {
     animation: scroll-down 30s linear infinite;
 }
-
-/* Inhalt */
 .scroll-content {
     writing-mode: vertical-rl;
     font-family: 'Noto Sans JP', sans-serif;
@@ -174,31 +147,16 @@ button:hover {
     color: white;
     text-shadow: 0 0 6px white;
 }
-
-/* Linkstext: gedreht */
 .scroll-text.left .scroll-content {
     transform: rotate(180deg);
 }
-
-/* Animations */
 @keyframes scroll-up {
-    0% {
-        transform: translateY(0);
-    }
-
-    100% {
-        transform: translateY(-50%);
-    }
+    0%   { transform: translateY(0); }
+    100% { transform: translateY(-50%); }
 }
-
 @keyframes scroll-down {
-    0% {
-        transform: translateY(-50%);
-    }
-
-    100% {
-        transform: translateY(0);
-    }
+    0%   { transform: translateY(-50%); }
+    100% { transform: translateY(0); }
 }
 
 /* ── Navbar ──────────────────────────────────────── */
@@ -217,25 +175,21 @@ button:hover {
     box-shadow: 0 2px 6px rgba(0, 0, 0, .4);
     z-index: 999;
 }
-
 .topnav a {
     color: #ffd700;
     text-decoration: none;
     font-weight: bold;
     text-transform: uppercase;
 }
-
 .topnav a:hover {
     text-decoration: underline;
 }
-
 .brand {
     font-family: 'Press Start 2P', cursive;
     font-size: 14px;
     color: #0ff;
     text-shadow: 0 0 3px #0ff;
 }
-
 .spacer {
     flex-grow: 1;
 }
@@ -260,7 +214,6 @@ table button {
     border-radius: 6px;
     cursor: pointer;
 }
-
 table button:hover {
     background: #c9302c;
 }
@@ -270,7 +223,6 @@ table button:hover {
     font-family: 'Orbitron', sans-serif;
     margin-right: 1rem;
 }
-
 .brand-jp {
     position: absolute;
     left: 50%;
@@ -280,10 +232,10 @@ table button:hover {
     letter-spacing: 2px;
 }
 
-/* ── Mobile Optimierung ─────────────────────────────── */
+/* ── Mobile Optimierung ───────────────────────────── */
 @media (max-width: 600px) {
     body {
-        padding: 60px 10px 30px;
+        padding: 80px 10px 30px;
     }
 
     .login-container {
@@ -294,7 +246,8 @@ table button:hover {
 
     .scroll-text.left,
     .scroll-text.right {
-        display: none; /* vertikaler Text ausblenden auf kleinen Geräten */
+        opacity: 0.25;
+        transform: scale(0.6);
     }
 
     .topnav {
@@ -315,15 +268,19 @@ table button:hover {
         font-size: 14px;
     }
 
-    input, button {
+    input,
+    button {
         font-size: 14px;
     }
 
     .zeit-form {
         flex-direction: column;
+        margin-top: 60px;
+        padding: 10px;
     }
 
-    .zeit-form input, .zeit-form button {
+    .zeit-form input,
+    .zeit-form button {
         width: 100%;
         margin-bottom: 10px;
     }
