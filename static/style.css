@@ -224,12 +224,12 @@ table button:hover {
     margin-right: 1rem;
 }
 .brand-jp {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
     font-family: 'Noto Sans JP', 'Orbitron', sans-serif;
     font-size: 1.2rem;
     letter-spacing: 2px;
+    margin: 0 auto;
+    text-align: center;
+    flex-grow: 1;
 }
 
 /* ── Mobile Optimierung ───────────────────────────── */
