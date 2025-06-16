@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
     <meta charset="UTF-8">
     <title>Race Valley Kings</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Bebas+Neue&family=Press+Start+2P&family=Noto+Sans+JP&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Bebas+Neue&family=Press+Start+2P&family=Noto+Sans+JP&display=swap"
+        rel="stylesheet">
 </head>
+
 <body>
     {% if user %}
     <nav class="topnav">
@@ -23,13 +27,8 @@
     <h1>Rennental-Bestzeiten</h1>
 
     <form action="/add" method="POST" class="zeit-form">
-        <input id="zeit"
-               name="zeit"
-               placeholder="mm:ss.mmm"
-               maxlength="10"
-               pattern="^[0-5]?[0-9]:[0-5][0-9]\.[0-9]{1,3}$"
-               title="Format z. B. 02:15.123"
-               required>
+        <input id="zeit" name="zeit" placeholder="mm:ss.mmm" maxlength="10"
+            pattern="^[0-5]?[0-9]:[0-5][0-9]\.[0-9]{1,3}$" title="Format z. B. 02:15.123" required>
         <input type="date" name="datum" required>
         <button type="submit">Hochladen</button>
     </form>
@@ -37,7 +36,12 @@
     <h2>Rangliste</h2>
     <table>
         <thead>
-            <tr><th>Name</th><th>Zeit</th><th>Datum</th><th>Aktion</th></tr>
+            <tr>
+                <th>Name</th>
+                <th>Zeit</th>
+                <th>Datum</th>
+                <th>Aktion</th>
+            </tr>
         </thead>
         <tbody>
             {% for eintrag in zeiten %}
@@ -51,7 +55,7 @@
                         <button type="submit" title="Löschen">🗑️</button>
                     </form>
                     {% else %}
-                        -
+                    -
                     {% endif %}
                 </td>
             </tr>
@@ -61,12 +65,13 @@
 
     <script src="{{ url_for('static', filename='theme.js') }}"></script>
     <script>
-    document.getElementById('zeit').addEventListener('input', e => {
-        let v = e.target.value.replace(/\D/g, '');
-        if (v.length > 2) v = v.slice(0, 2) + ':' + v.slice(2);
-        if (v.length > 5) v = v.slice(0, 5) + '.' + v.slice(5, 8);
-        e.target.value = v;
-    });
+        document.getElementById('zeit').addEventListener('input', e => {
+            let v = e.target.value.replace(/\D/g, '');
+            if (v.length > 2) v = v.slice(0, 2) + ':' + v.slice(2);
+            if (v.length > 5) v = v.slice(0, 5) + '.' + v.slice(5, 8);
+            e.target.value = v;
+        });
     </script>
 </body>
+
 </html>

@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
     <meta charset="UTF-8">
     <title>Admin – Race Valley Kings</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Bebas+Neue&family=Press+Start+2P&family=Noto+Sans+JP&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Bebas+Neue&family=Press+Start+2P&family=Noto+Sans+JP&display=swap"
+        rel="stylesheet">
 
 </head>
+
 <body>
     <nav class="topnav">
         <span class="brand">👑 Admin-Panel</span>
@@ -19,7 +23,7 @@
 
     <h2>Benutzer hinzufügen</h2>
     <form action="/admin/add-user" method="POST" class="user-form">
-        <input name="username" placeholder="Benutzername" required>
+        <input name="username" placeholder="Benutzername" required>§
         <input type="password" name="password" placeholder="Passwort" required>
         <label><input type="checkbox" name="is_admin"> Admin?</label>
         <button type="submit">Hinzufügen</button>
@@ -27,7 +31,14 @@
 
     <h2>Alle Benutzer</h2>
     <table>
-        <thead><tr><th>ID</th><th>Name</th><th>Admin</th><th>Aktion</th></tr></thead>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Admin</th>
+                <th>Aktion</th>
+            </tr>
+        </thead>
         <tbody>
             {% for id, name, is_admin in nutzer %}
             <tr>
@@ -46,6 +57,7 @@
         </tbody>
     </table>
 
-<script src="{{ url_for('static', filename='theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
 </body>
+
 </html>
