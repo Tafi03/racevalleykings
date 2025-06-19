@@ -31,21 +31,22 @@
         <input id="zeit" name="zeit" placeholder="mm:ss.mmm" maxlength="10"
             pattern="^[0-5]?[0-9]:[0-5][0-9]\.[0-9]{1,3}$" title="Format z. B. 02:15.123" required>
         <input type="date" name="datum" required>
+
+        <select name="kategorie" required>
+            <option value="downhill">🏔️ Downhill</option>
+            <option value="uphill">⛰️ Uphill</option>
+        </select>
+
         <button type="submit">Hochladen</button>
     </form>
 
-    <h2>Rangliste</h2>
+    <h2>🏔️ Downhill-Rangliste</h2>
     <table>
         <thead>
-            <tr>
-                <th>Name</th>
-                <th>Zeit</th>
-                <th>Datum</th>
-                <th>Aktion</th>
-            </tr>
+            <tr><th>Name</th><th>Zeit</th><th>Datum</th><th>Aktion</th></tr>
         </thead>
         <tbody>
-            {% for eintrag in zeiten %}
+            {% for eintrag in downhill %}
             <tr>
                 <td>{{ eintrag.name }}</td>
                 <td>{{ eintrag.zeit }}</td>
@@ -55,9 +56,30 @@
                     <form action="/delete/{{ eintrag.id }}" method="POST" style="display:inline;">
                         <button type="submit" title="Löschen">🗑️</button>
                     </form>
-                    {% else %}
-                    -
-                    {% endif %}
+                    {% else %}-{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>⛰️ Uphill-Rangliste</h2>
+    <table>
+        <thead>
+            <tr><th>Name</th><th>Zeit</th><th>Datum</th><th>Aktion</th></tr>
+        </thead>
+        <tbody>
+            {% for eintrag in uphill %}
+            <tr>
+                <td>{{ eintrag.name }}</td>
+                <td>{{ eintrag.zeit }}</td>
+                <td>{{ eintrag.datum }}</td>
+                <td>
+                    {% if admin or eintrag.user == user %}
+                    <form action="/delete/{{ eintrag.id }}" method="POST" style="display:inline;">
+                        <button type="submit" title="Löschen">🗑️</button>
+                    </form>
+                    {% else %}-{% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -74,5 +96,4 @@
         });
     </script>
 </body>
-
 </html>
