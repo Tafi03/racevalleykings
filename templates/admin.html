@@ -58,6 +58,26 @@
         </tbody>
     </table>
 
+    <h2>Admin-Log</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Aktion</th>
+                <th>Zeitpunkt</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.user }}</td>
+                <td>{{ log.action }}</td>
+                <td>{{ log.timestamp }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
     <script src="{{ url_for('static', filename='theme.js') }}"></script>
 </body>
 

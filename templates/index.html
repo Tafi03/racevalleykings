@@ -43,12 +43,20 @@
     <h2>🏔️ Downhill-Rangliste</h2>
     <table>
         <thead>
-            <tr><th>Name</th><th>Zeit</th><th>Datum</th><th>Aktion</th></tr>
+            <tr>
+                <th>Name</th>
+                <th>Zeit</th>
+                <th>Datum</th>
+                <th>Aktion</th>
+            </tr>
         </thead>
         <tbody>
             {% for eintrag in downhill %}
             <tr>
-                <td>{{ eintrag.name }}</td>
+                <td>
+                    {% if loop.index == 1 %}🥇 {% elif loop.index == 2 %}🥈 {% elif loop.index == 3 %}🥉 {% endif %}
+                    {{ eintrag.name }}
+                </td>
                 <td>{{ eintrag.zeit }}</td>
                 <td>{{ eintrag.datum }}</td>
                 <td>
@@ -66,12 +74,20 @@
     <h2>⛰️ Uphill-Rangliste</h2>
     <table>
         <thead>
-            <tr><th>Name</th><th>Zeit</th><th>Datum</th><th>Aktion</th></tr>
+            <tr>
+                <th>Name</th>
+                <th>Zeit</th>
+                <th>Datum</th>
+                <th>Aktion</th>
+            </tr>
         </thead>
         <tbody>
             {% for eintrag in uphill %}
             <tr>
-                <td>{{ eintrag.name }}</td>
+                <td>
+                    {% if loop.index == 1 %}🥇 {% elif loop.index == 2 %}🥈 {% elif loop.index == 3 %}🥉 {% endif %}
+                    {{ eintrag.name }}
+                </td>
                 <td>{{ eintrag.zeit }}</td>
                 <td>{{ eintrag.datum }}</td>
                 <td>
@@ -96,4 +112,5 @@
         });
     </script>
 </body>
+
 </html>
