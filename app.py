@@ -100,6 +100,17 @@ def init_db() -> None:
                 ))
                 print("⮕  logs.user wurde nach username umbenannt")
 init_db()
+
+def approve_admin():
+    with engine.begin() as conn:
+        conn.execute(text("""
+            UPDATE nutzer
+            SET is_approved = TRUE
+            WHERE username = 'admin'
+        """))
+
+approve_admin()
+
 # ─────────────────── Hilfsfunktionen ───────────────────────────────────
 def current_user_role():
     username = session.get("user")
