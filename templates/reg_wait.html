@@ -1,16 +1,53 @@
-<!-- templates/reg_wait.html -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Registrierung abgeschickt</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrierung – Race Valley Kings</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-   <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Bebas+Neue&family=Press+Start+2P&family=Noto+Sans+JP&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h2>✅ Registrierung erfolgreich!</h2>
-  <p>Dein Account wurde angelegt, muss aber noch von einem Admin freigegeben werden.</p>
-  <p>Bitte schau später noch einmal vorbei.</p>
-  <a href="/login">Zurück zum Login</a>
+    <!-- LINKS -->
+    <div class="scroll-text left">
+        <div class="track">
+            <div class="scroll-content">レースバレー・キングス<br>レースバレー・キングス<br>レースバレー・キングス</div>
+            <div class="scroll-content">レースバレー・キングス<br>レースバレー・キングス<br>レースバレー・キングス</div>
+            <div class="scroll-content">レースバレー・キングス<br>レースバレー・キングス<br>レースバレー・キングス</div>
+            <div class="scroll-content">レースバレー・キングス<br>レースバレー・キングス<br>レースバレー・キングス</div>
+            <div class="scroll-content">レースバレー・キングス<br>レースバレー・キングス<br>レースバレー・キングス</div>
+            <div class="scroll-content">レースバレー・キングス<br>レースバレー・キングス<br>レースバレー・キングス</div>
+        </div>
+    </div>
+
+    <!-- RECHTS -->
+    <div class="scroll-text right">
+        <div class="track reverse">
+            <div class="scroll-content">レースバレー・キングス<br>レースバレー・キングス<br>レースバレー・キングス</div>
+            <div class="scroll-content">レースバレー・キングス<br>レースバレー・キングス<br>レースバレー・キングス</div>
+            <div class="scroll-content">レースバレー・キングス<br>レースバレー・キングス<br>レースバレー・キングス</div>
+            <div class="scroll-content">レースバレー・キングス<br>レースバレー・キングス<br>レースバレー・キングス</div>
+            <div class="scroll-content">レースバレー・キングス<br>レースバレー・キングス<br>レースバレー・キングス</div>
+            <div class="scroll-content">レースバレー・キングス<br>レースバレー・キングス<br>レースバレー・キングス</div>
+        </div>
+    </div>
+    
+  <nav class="topnav">
+    <span class="brand">🏁 Race Valley Kings</span>
+    <span class="brand-jp">レースバレー・キングス</span>
+    <span class="spacer"></span>
+    <a href="/login">Login</a>
+    <button id="theme-toggle" class="theme-btn">🌙</button>
+  </nav>
+
+  <main class="login-container">
+    <h2>✅ Registrierung erfolgreich</h2>
+    <p>Dein Account wurde angelegt und wartet nun auf Freigabe durch einen Admin.</p>
+    <p>Bitte schaue später noch einmal vorbei.</p>
+    <a href="/login" class="btn">Zurück zum Login</a>
+  </main>
+
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
 </body>
 </html>
