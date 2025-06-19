@@ -11,31 +11,40 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 DATABASE_URL = os.environ["DATABASE_URL"]
 engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
 
-# ─────────────────── Datenbank & Migration ─────────────────────────────
+# ─────────────────── Datenbank-Initialisierung & Migration ───────────────────
 def init_db() -> None:
-    # ───────────────── Nutzer & Zeiten ──────────────────────────────
+    """
+    - legt Tabellen nutzer, zeiten, logs an (falls nicht vorhanden)
+    - rüstet fehlende Spalten is_approved (nutzer) und kategorie (zeiten) nach
+    - führt ältere Installationen sauber weiter
+    """
+    # ───────── Tabelle NUTZER ────────────────────────────────────────────────
     with engine.begin() as conn:
-
-        # ── Tabelle NUTZER ──────────────────────────────────────────
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS nutzer (
                 id           SERIAL PRIMARY KEY,
                 username     TEXT UNIQUE NOT NULL,
                 passwort     TEXT NOT NULL,
                 is_admin     BOOLEAN DEFAULT FALSE,
-                is_approved  BOOLEAN DEFAULT FALSE        -- neu: Freigabe
+                is_approved  BOOLEAN DEFAULT FALSE
             );
         """))
 
-        # ► Spalte is_approved nachrüsten, falls alte DB
-        try:
-            conn.execute(text(
-                "ALTER TABLE nutzer ADD COLUMN is_approved BOOLEAN DEFAULT FALSE;"
-            ))
-        except Exception:
-            pass  # Spalte existiert bereits
+        # Spalte is_approved nachrüsten, falls sie fehlt
+        has_is_approved = conn.execute(text("""
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_name = 'nutzer'
+              AND column_name = 'is_approved'
+        """)).scalar()
+        if not has_is_approved:
+            conn.execute(text("""
+                ALTER TABLE nutzer
+                ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE;
+            """))
+            print("⮕  Spalte nutzer.is_approved wurde angelegt")
 
-        # ── Tabelle ZEITEN ─────────────────────────────────────────
+        # ───────── Tabelle ZEITEN ───────────────────────────────────────────
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS zeiten (
                 id        SERIAL PRIMARY KEY,
@@ -47,48 +56,49 @@ def init_db() -> None:
             );
         """))
 
-        # ► Spalte kategorie nachrüsten, falls alte DB
-        try:
-            conn.execute(text(
-                "ALTER TABLE zeiten ADD COLUMN kategorie TEXT DEFAULT 'downhill';"
-            ))
-        except Exception:
-            pass  # Spalte existiert bereits
+        # Spalte kategorie nachrüsten, falls sie fehlt
+        has_kat = conn.execute(text("""
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_name = 'zeiten'
+              AND column_name = 'kategorie'
+        """)).scalar()
+        if not has_kat:
+            conn.execute(text("""
+                ALTER TABLE zeiten
+                ADD COLUMN IF NOT EXISTS kategorie TEXT DEFAULT 'downhill';
+            """))
+            print("⮕  Spalte zeiten.kategorie wurde angelegt")
 
-    # ───────────────── Logs separat anlegen / migrieren ────────────
-    try:
-        with engine.begin() as conn:
-            exists = conn.execute(text(
-                "SELECT to_regclass('public.logs')"
-            )).scalar()
+    # ───────── Tabelle LOGS (separat, um Transaktions-Rollback zu vermeiden) ─
+    with engine.begin() as conn:
+        exists = conn.execute(text(
+            "SELECT to_regclass('public.logs')"
+        )).scalar()
 
-            if exists is None:
-                # Tabelle noch nicht da → neu erstellen
-                conn.execute(text("""
-                    CREATE TABLE logs (
-                        id        SERIAL PRIMARY KEY,
-                        username  TEXT NOT NULL,
-                        action    TEXT NOT NULL,
-                        timestamp TIMESTAMP NOT NULL
-                    );
-                """))
-            else:
-                # Alte Installationen: Spalten-Umbenennung user → username
-                needs_rename = conn.execute(text("""
-                    SELECT 1
-                    FROM information_schema.columns
-                    WHERE table_name = 'logs'
-                      AND column_name = 'user'
-                """)).scalar()
-
-                if needs_rename:
-                    conn.execute(text(
-                        'ALTER TABLE logs RENAME COLUMN "user" TO username;'
-                    ))
-    except Exception as e:
-        print("[WARN] Log-Migration:", e)
-
-init_db()
+        if exists is None:
+            conn.execute(text("""
+                CREATE TABLE logs (
+                    id        SERIAL PRIMARY KEY,
+                    username  TEXT NOT NULL,
+                    action    TEXT NOT NULL,
+                    timestamp TIMESTAMP NOT NULL
+                );
+            """))
+            print("⮕  Tabelle logs wurde erstellt")
+        else:
+            # alte Spalte "user" -> "username" umbenennen
+            needs_rename = conn.execute(text("""
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'logs'
+                  AND column_name = 'user'
+            """)).scalar()
+            if needs_rename:
+                conn.execute(text(
+                    'ALTER TABLE logs RENAME COLUMN "user" TO username;'
+                ))
+                print("⮕  logs.user wurde nach username umbenannt")
 
 # ─────────────────── Hilfsfunktionen ───────────────────────────────────
 def current_user_role():
