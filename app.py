@@ -14,7 +14,7 @@ engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
 # ───── Datenbank-Schema inkl. Migration ────────────────────────────────
 def init_db() -> None:
     with engine.begin() as conn:
-        # Nutzer
+        # Nutzer-Tabelle
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS nutzer (
                 id        SERIAL PRIMARY KEY,
@@ -24,7 +24,7 @@ def init_db() -> None:
             );
         """))
 
-        # Zeiten
+        # Zeiten-Tabelle
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS zeiten (
                 id        SERIAL PRIMARY KEY,
@@ -36,40 +36,39 @@ def init_db() -> None:
             );
         """))
 
-        # Kategorie-Spalte ergänzen, falls sie fehlt (alte DB)
+        # Kategorie-Spalte ergänzen
         try:
             conn.execute(text("ALTER TABLE zeiten ADD COLUMN kategorie TEXT DEFAULT 'downhill';"))
         except Exception:
-            pass
+            pass  # Spalte existiert bereits
 
-        # Logs: Tabelle vorhanden?
-        logs_exists = conn.execute(text(
-            "SELECT to_regclass('public.logs')"
-        )).scalar()
+    # LOGS prüfen separat, damit fehlerhafte Abfragen nicht alles abbrechen
+    try:
+        with engine.begin() as conn:
+            result = conn.execute(text("SELECT to_regclass('public.logs')")).scalar()
 
-        if logs_exists:
-            # Prüfen, ob alte Spalte 'user' existiert → Umbenennen
-            needs_rename = conn.execute(text("""
-                SELECT 1 FROM information_schema.columns
-                WHERE table_name='logs' AND column_name='user'
-            """)).scalar()
+            if result is None:
+                # logs-Tabelle existiert nicht → neu anlegen
+                conn.execute(text("""
+                    CREATE TABLE logs (
+                        id        SERIAL PRIMARY KEY,
+                        username  TEXT NOT NULL,
+                        action    TEXT NOT NULL,
+                        timestamp TIMESTAMP NOT NULL
+                    );
+                """))
+            else:
+                # Prüfen, ob "user"-Spalte existiert (alte Version)
+                needs_rename = conn.execute(text("""
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'logs' AND column_name = 'user'
+                """)).scalar()
 
-            if needs_rename:
-                try:
+                if needs_rename:
                     conn.execute(text('ALTER TABLE logs RENAME COLUMN "user" TO username;'))
-                    print("Spalte 'user' in 'username' umbenannt.")
-                except Exception as e:
-                    print("Rename fehlgeschlagen:", e)
-        else:
-            # Tabelle neu anlegen
-            conn.execute(text("""
-                CREATE TABLE logs (
-                    id        SERIAL PRIMARY KEY,
-                    username  TEXT NOT NULL,
-                    action    TEXT NOT NULL,
-                    timestamp TIMESTAMP NOT NULL
-                );
-            """))
+    except Exception as e:
+        print(f"[WARN] Problem beim Log-Migrationsteil: {e}")
+        
 init_db()
 
 # ───── Hilfsfunktionen ──────────────────────────────────────────────────
