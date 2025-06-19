@@ -197,13 +197,27 @@ def admin_panel():
         return redirect('/login')
 
     with engine.begin() as conn:
+        # Benutzerliste
         nutzer = conn.execute(text("""
             SELECT id, username, is_admin
             FROM nutzer
             ORDER BY id
         """)).all()
 
-    return render_template('admin.html', nutzer=nutzer, user=user)
+        # Logs ebenfalls mitliefern  (Mapping → l.username, l.action, l.timestamp)
+        logs = conn.execute(text("""
+            SELECT username, action, timestamp
+            FROM logs
+            ORDER BY timestamp DESC
+            LIMIT 500
+        """)).mappings().all()      # <── wichtig für Attributzugriff im Template
+
+    return render_template(
+        'admin.html',
+        nutzer=nutzer,
+        logs=logs,   # <── jetzt vorhanden
+        user=user
+    )
 
 @app.route('/admin/add-user', methods=['POST'])
 def admin_add_user():
