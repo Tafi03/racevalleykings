@@ -58,7 +58,7 @@
         </tbody>
     </table>
 
-    <h2>Admin-Log</h2>
+    <h2>Aktions-Logs</h2>
     <table>
         <thead>
             <tr>
@@ -68,11 +68,11 @@
             </tr>
         </thead>
         <tbody>
-            {% for log in logs %}
+            {% for l in logs %}
             <tr>
-                <td>{{ log.user }}</td>
-                <td>{{ log.action }}</td>
-                <td>{{ log.timestamp }}</td>
+                <td>{{ l.username }}</td>
+                <td>{{ l.action }}</td>
+                <td>{{ l.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
             </tr>
             {% endfor %}
         </tbody>
