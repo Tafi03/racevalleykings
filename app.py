@@ -99,7 +99,7 @@ def init_db() -> None:
                     'ALTER TABLE logs RENAME COLUMN "user" TO username;'
                 ))
                 print("⮕  logs.user wurde nach username umbenannt")
-
+init_db()
 # ─────────────────── Hilfsfunktionen ───────────────────────────────────
 def current_user_role():
     username = session.get("user")
