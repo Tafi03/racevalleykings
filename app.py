@@ -38,7 +38,7 @@ def init_db() -> None:
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS logs (
                 id        SERIAL PRIMARY KEY,
-                user      TEXT NOT NULL,
+                username      TEXT NOT NULL,
                 action    TEXT NOT NULL,
                 timestamp TIMESTAMP NOT NULL
             );
@@ -63,7 +63,7 @@ def log_action(user: str, action: str) -> None:
     """Schreibt einen Eintrag in die Log-Tabelle."""
     with engine.begin() as conn:
         conn.execute(text("""
-            INSERT INTO logs (user, action, timestamp)
+            INSERT INTO logs (username, action, timestamp)
             VALUES (:u, :a, :t)
         """), {"u": user, "a": action, "t": datetime.now()})
 
