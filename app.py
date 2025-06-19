@@ -187,11 +187,21 @@ def logout():
         log_action(user, "Logout durchgeführt")
     return redirect('/login')
 
-# ───── Admin-Panel (optional) ───────────────────────────────────────────
-# @app.route('/admin')
-# def admin():
-#     # logs ausgeben, wenn nötig
-#     pass
+@app.route('/admin')
+def admin_panel():
+    user, is_admin = current_user_role()
+    if not user or not is_admin:
+        return redirect('/zeiten')
+
+    with engine.begin() as conn:
+        logs = conn.execute(text("""
+            SELECT username, action, timestamp
+            FROM logs
+            ORDER BY timestamp DESC
+            LIMIT 100
+        """)).all()
+
+    return render_template('admin.html', logs=logs, user=user)
 
 if __name__ == '__main__':
     app.run(debug=True)
