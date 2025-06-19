@@ -4,14 +4,14 @@ from sqlalchemy import create_engine, text
 from datetime import datetime
 import os
 
-# ─────────── Grundkonfiguration ─────────────────────────────────────────
+# ───── Grundkonfiguration ───────────────────────────────────────────────
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 
 DATABASE_URL = os.environ["DATABASE_URL"]
 engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
 
-# ─────────── DB-Schema & Migrationen ────────────────────────────────────
+# ───── Datenbank-Schema inkl. Migration ────────────────────────────────
 def init_db() -> None:
     with engine.begin() as conn:
         # Nutzer
@@ -36,44 +36,62 @@ def init_db() -> None:
             );
         """))
 
-        # Kategorie nachrüsten (falls fehlend)
+        # Kategorie-Spalte ergänzen, falls sie fehlt (alte DB)
         try:
             conn.execute(text("ALTER TABLE zeiten ADD COLUMN kategorie TEXT DEFAULT 'downhill';"))
         except Exception:
             pass
 
-        # Logs  (username statt user!)
-        conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS logs (
-                id        SERIAL PRIMARY KEY,
-                username  TEXT NOT NULL,
-                action    TEXT NOT NULL,
-                timestamp TIMESTAMP NOT NULL
-            );
-        """))
+        # Logs: Tabelle vorhanden?
+        logs_exists = conn.execute(text(
+            "SELECT to_regclass('public.logs')"
+        )).scalar()
 
+        if logs_exists:
+            # Prüfen, ob alte Spalte 'user' existiert → Umbenennen
+            needs_rename = conn.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name='logs' AND column_name='user'
+            """)).scalar()
+
+            if needs_rename:
+                try:
+                    conn.execute(text('ALTER TABLE logs RENAME COLUMN "user" TO username;'))
+                    print("Spalte 'user' in 'username' umbenannt.")
+                except Exception as e:
+                    print("Rename fehlgeschlagen:", e)
+        else:
+            # Tabelle neu anlegen
+            conn.execute(text("""
+                CREATE TABLE logs (
+                    id        SERIAL PRIMARY KEY,
+                    username  TEXT NOT NULL,
+                    action    TEXT NOT NULL,
+                    timestamp TIMESTAMP NOT NULL
+                );
+            """))
 init_db()
 
-# ─────────── Hilfsfunktionen ────────────────────────────────────────────
+# ───── Hilfsfunktionen ──────────────────────────────────────────────────
 def current_user_role():
     user = session.get("user")
     if not user:
         return None, False
     with engine.begin() as conn:
-        row = conn.execute(text(
-            "SELECT is_admin FROM nutzer WHERE username=:u"
-        ), {"u": user}).fetchone()
+        row = conn.execute(
+            text("SELECT is_admin FROM nutzer WHERE username = :u"),
+            {"u": user}
+        ).fetchone()
     return user, bool(row and row[0])
 
-def log_action(username: str, action: str) -> None:
-    """Schreibt einen Eintrag in die Log-Tabelle."""
+def log_action(username: str, action: str):
     with engine.begin() as conn:
         conn.execute(text("""
             INSERT INTO logs (username, action, timestamp)
             VALUES (:u, :a, :t)
         """), {"u": username, "a": action, "t": datetime.now()})
 
-# ─────────── Routen ─────────────────────────────────────────────────────
+# ───── Routen ───────────────────────────────────────────────────────────
 @app.route('/')
 def root():
     return redirect('/zeiten')
@@ -109,80 +127,72 @@ def add():
     if 'user' not in session:
         return redirect('/login')
 
-    username = session['user']
-    zeit  = request.form['zeit']
-    datum = request.form['datum']
-    kat   = request.form['kategorie']          # downhill / uphill
+    name      = session['user']
+    zeit      = request.form['zeit']
+    datum     = request.form['datum']
+    kategorie = request.form['kategorie']
 
     with engine.begin() as conn:
         conn.execute(text("""
             INSERT INTO zeiten (name, zeit, datum, "user", kategorie)
             VALUES (:n,:z,:d,:u,:k)
-        """), {"n": username, "z": zeit, "d": datum, "u": username, "k": kat})
+        """), {"n": name, "z": zeit, "d": datum, "u": name, "k": kategorie})
 
-    log_action(username, f"Zeit hinzugefügt ({kat}): {zeit} am {datum}")
+    log_action(name, f"Neue Zeit ({kategorie}) eingetragen: {zeit}")
     return redirect('/zeiten')
 
 @app.route('/delete/<int:zid>', methods=['POST'])
 def delete_time(zid):
-    username, is_admin = current_user_role()
-    if not username:
+    user, is_admin = current_user_role()
+    if not user:
         return redirect('/login')
 
-    sql = ("DELETE FROM zeiten WHERE id = :id"
-           if is_admin else
-           'DELETE FROM zeiten WHERE id = :id AND "user" = :u')
-
     with engine.begin() as conn:
-        conn.execute(text(sql), {"id": zid, "u": username})
+        if is_admin:
+            entry = conn.execute(text("SELECT name, zeit, kategorie FROM zeiten WHERE id = :id"), {"id": zid}).fetchone()
+            conn.execute(text("DELETE FROM zeiten WHERE id = :id"), {"id": zid})
+        else:
+            entry = conn.execute(text("""
+                SELECT name, zeit, kategorie FROM zeiten
+                WHERE id = :id AND "user" = :u
+            """), {"id": zid, "u": user}).fetchone()
+            conn.execute(text("""
+                DELETE FROM zeiten WHERE id = :id AND "user" = :u
+            """), {"id": zid, "u": user})
 
-    log_action(username, f"Zeit gelöscht (ID {zid})")
+    if entry:
+        log_action(user, f"Zeit gelöscht: {entry.zeit} ({entry.kategorie}) von {entry.name}")
     return redirect('/zeiten')
 
-# ─────────── Login / Logout ────────────────────────────────────────────
-@app.route('/login', methods=['GET', 'POST'])
+# ───── Login / Logout / Registrierung ───────────────────────────────────
+@app.route('/login', methods=['GET','POST'])
 def login():
     error = None
     if request.method == 'POST':
         u = request.form['username']
         p = request.form['password']
         with engine.begin() as conn:
-            row = conn.execute(text(
-                "SELECT passwort FROM nutzer WHERE username=:u"
-            ), {"u": u}).fetchone()
+            row = conn.execute(text("SELECT passwort FROM nutzer WHERE username=:u"),
+                               {"u": u}).fetchone()
         if row and check_password_hash(row[0], p):
             session['user'] = u
-            log_action(u, "Login")
+            log_action(u, "Login erfolgreich")
             return redirect('/zeiten')
         error = "Login fehlgeschlagen"
     return render_template("login.html", error=error)
 
 @app.route('/logout')
 def logout():
-    u = session.pop('user', None)
-    if u:
-        log_action(u, "Logout")
+    user = session.pop('user', None)
+    if user:
+        log_action(user, "Logout durchgeführt")
     return redirect('/login')
 
-# ─────────── Admin-Log-Ansicht ──────────────────────────────────────────
-@app.route('/admin/logs')
-def admin_logs():
-    user, admin = current_user_role()
-    if not admin:
-        return redirect('/login')
-
-    with engine.begin() as conn:
-        logs = conn.execute(text("""
-            SELECT username, action, timestamp
-            FROM logs
-            ORDER BY timestamp DESC
-            LIMIT 500
-        """)).all()
-
-    return render_template("logs.html", logs=logs, user=user, admin=True)
-
-# ─────────── Admin-Panel (gekürzt) ──────────────────────────────────────
-# … deine bisherigen Admin-Routen bleiben unverändert …
+# ───── Admin-Panel (optional) ───────────────────────────────────────────
+# @app.route('/admin')
+# def admin():
+#     # logs ausgeben, wenn nötig
+#     pass
 
 if __name__ == '__main__':
     app.run(debug=True)
