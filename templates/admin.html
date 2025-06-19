@@ -1,85 +1,89 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin – Race Valley Kings</title>
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Bebas+Neue&family=Press+Start+2P&family=Noto+Sans+JP&display=swap"
-        rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Race Valley Kings</title>
 
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Bebas+Neue&family=Press+Start+2P&family=Noto+Sans+JP&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <nav class="topnav">
-        <span class="brand">🏁 Race Valley Kings</span>
-        <span class="brand-jp">レースバレー・キングス</span>
-        <span class="spacer"></span>
-        <a href="/zeiten">Zeiten</a>
-        <a href="/logout">Logout</a>
-        <button id="theme-toggle" class="theme-btn">🌙</button>
-    </nav>
+  <nav class="topnav">
+    <span class="brand">🏁 Race Valley Kings</span>
+    <span class="brand-jp">レースバレー・キングス</span>
+    <span class="spacer"></span>
+    <a href="/zeiten">Zeiten</a>
+    <a href="/logout">Logout</a>
+    <button id="theme-toggle" class="theme-btn">🌙</button>
+  </nav>
 
-    <h2>Benutzer hinzufügen</h2>
-    <form action="/admin/add-user" method="POST" class="user-form">
-        <input name="username" placeholder="Benutzername" required>§
-        <input type="password" name="password" placeholder="Passwort" required>
-        <label><input type="checkbox" name="is_admin"> Admin?</label>
-        <button type="submit">Hinzufügen</button>
-    </form>
+  <h2>Benutzer hinzufügen</h2>
+  <form action="/admin/add-user" method="POST" class="user-form">
+    <input name="username" placeholder="Benutzername" required>
+    <input type="password" name="password" placeholder="Passwort" required>
+    <label><input type="checkbox" name="is_admin"> Admin?</label>
+    <button type="submit">Hinzufügen</button>
+  </form>
 
-    <h2>Alle User</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Admin</th>
-                <th>Aktion</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for id, name, is_admin in nutzer %}
-            <tr>
-                <td>{{ id }}</td>
-                <td>{{ name }}</td>
-                <td>{{ '✅' if is_admin else '❌' }}</td>
-                <td>
-                    {% if name != user %}
-                    <form action="/admin/delete-user/{{ id }}" method="POST">
-                        <button type="submit">Löschen</button>
-                    </form>
-                    {% else %}(du){% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  <h2>Alle User</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Admin</th>
+        <th>Freigegeben</th>
+        <th>Aktion</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for id, name, is_admin, is_approved in nutzer %}
+      <tr>
+        <td>{{ id }}</td>
+        <td>{{ name }}</td>
+        <td>{{ '✅' if is_admin else '❌' }}</td>
+        <td>{{ '✅' if is_approved else '⌛' }}</td>
+        <td>
 
-    <h2>Aktions-Logs</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>User</th>
-                <th>Aktion</th>
-                <th>Zeitpunkt</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for l in logs %}
-            <tr>
-                <td>{{ l.username }}</td>
-                <td>{{ l.action }}</td>
-                <td>{{ l.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+          {# Freigeben-Button nur wenn noch nicht approved #}
+          {% if not is_approved %}
+          <form action="/admin/approve-user/{{ id }}" method="POST" style="display:inline;">
+            <button title="Freigeben">✔</button>
+          </form>
+          {% endif %}
 
-    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+          {# Löschen-Button (nicht für eigenen Account) #}
+          {% if name != user %}
+          <form action="/admin/delete-user/{{ id }}" method="POST" style="display:inline;">
+            <button title="Löschen">🗑️</button>
+          </form>
+          {% else %}(du){% endif %}
+
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Aktions-Logs</h2>
+  <table>
+    <thead>
+      <tr><th>User</th><th>Aktion</th><th>Zeitpunkt</th></tr>
+    </thead>
+    <tbody>
+      {% for l in logs %}
+      <tr>
+        <td>{{ l.username }}</td>
+        <td>{{ l.action }}</td>
+        <td>{{ l.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
 </body>
-
 </html>

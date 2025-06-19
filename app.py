@@ -13,18 +13,29 @@ engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
 
 # ─────────────────── Datenbank & Migration ─────────────────────────────
 def init_db() -> None:
+    # ───────────────── Nutzer & Zeiten ──────────────────────────────
     with engine.begin() as conn:
-        # Nutzer
+
+        # ── Tabelle NUTZER ──────────────────────────────────────────
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS nutzer (
-                id        SERIAL PRIMARY KEY,
-                username  TEXT UNIQUE NOT NULL,
-                passwort  TEXT NOT NULL,
-                is_admin  BOOLEAN DEFAULT FALSE
+                id           SERIAL PRIMARY KEY,
+                username     TEXT UNIQUE NOT NULL,
+                passwort     TEXT NOT NULL,
+                is_admin     BOOLEAN DEFAULT FALSE,
+                is_approved  BOOLEAN DEFAULT FALSE        -- neu: Freigabe
             );
         """))
 
-        # Zeiten
+        # ► Spalte is_approved nachrüsten, falls alte DB
+        try:
+            conn.execute(text(
+                "ALTER TABLE nutzer ADD COLUMN is_approved BOOLEAN DEFAULT FALSE;"
+            ))
+        except Exception:
+            pass  # Spalte existiert bereits
+
+        # ── Tabelle ZEITEN ─────────────────────────────────────────
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS zeiten (
                 id        SERIAL PRIMARY KEY,
@@ -36,18 +47,23 @@ def init_db() -> None:
             );
         """))
 
-        # Kategorie-Spalte nachrüsten
+        # ► Spalte kategorie nachrüsten, falls alte DB
         try:
-            conn.execute(text("ALTER TABLE zeiten ADD COLUMN kategorie TEXT DEFAULT 'downhill';"))
+            conn.execute(text(
+                "ALTER TABLE zeiten ADD COLUMN kategorie TEXT DEFAULT 'downhill';"
+            ))
         except Exception:
-            pass
+            pass  # Spalte existiert bereits
 
-    # Logs separat prüfen, damit Fehler hier keine Transaktion killen
+    # ───────────────── Logs separat anlegen / migrieren ────────────
     try:
         with engine.begin() as conn:
-            exists = conn.execute(text("SELECT to_regclass('public.logs')")).scalar()
+            exists = conn.execute(text(
+                "SELECT to_regclass('public.logs')"
+            )).scalar()
 
             if exists is None:
+                # Tabelle noch nicht da → neu erstellen
                 conn.execute(text("""
                     CREATE TABLE logs (
                         id        SERIAL PRIMARY KEY,
@@ -57,12 +73,18 @@ def init_db() -> None:
                     );
                 """))
             else:
+                # Alte Installationen: Spalten-Umbenennung user → username
                 needs_rename = conn.execute(text("""
-                    SELECT 1 FROM information_schema.columns
-                    WHERE table_name='logs' AND column_name='user'
+                    SELECT 1
+                    FROM information_schema.columns
+                    WHERE table_name = 'logs'
+                      AND column_name = 'user'
                 """)).scalar()
+
                 if needs_rename:
-                    conn.execute(text('ALTER TABLE logs RENAME COLUMN "user" TO username;'))
+                    conn.execute(text(
+                        'ALTER TABLE logs RENAME COLUMN "user" TO username;'
+                    ))
     except Exception as e:
         print("[WARN] Log-Migration:", e)
 
@@ -164,22 +186,31 @@ def delete_time(zid):
     log_action(username, f"Zeit gelöscht (ID {zid})")
     return redirect('/zeiten')
 
-# ─────────────────── Auth ───────────────────────────────────────────────
+# ─────────────────── Auth ──────────────────────────────────────────────
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
     if request.method == 'POST':
-        u = request.form['username']
+        u = request.form['username'].strip()
         p = request.form['password']
+
         with engine.begin() as conn:
-            row = conn.execute(text(
-                "SELECT passwort FROM nutzer WHERE username=:u"
-            ), {"u": u}).fetchone()
+            row = conn.execute(text("""
+                SELECT passwort, is_approved
+                FROM nutzer
+                WHERE username = :u
+            """), {"u": u}).fetchone()
+
         if row and check_password_hash(row[0], p):
-            session['user'] = u
-            log_action(u, "Login")
-            return redirect('/zeiten')
-        error = "Login fehlgeschlagen"
+            if not row[1]:                       # is_approved == False
+                error = "Account noch nicht freigegeben."
+            else:
+                session['user'] = u
+                log_action(u, "Login")
+                return redirect('/zeiten')
+        else:
+            error = "Login fehlgeschlagen"
+
     return render_template("login.html", error=error)
 
 @app.route('/logout')
@@ -197,25 +228,23 @@ def admin_panel():
         return redirect('/login')
 
     with engine.begin() as conn:
-        # Benutzerliste
         nutzer = conn.execute(text("""
-            SELECT id, username, is_admin
+            SELECT id, username, is_admin, is_approved   -- ◄◄◄ hier 4 Spalten
             FROM nutzer
             ORDER BY id
         """)).all()
 
-        # Logs ebenfalls mitliefern  (Mapping → l.username, l.action, l.timestamp)
         logs = conn.execute(text("""
             SELECT username, action, timestamp
             FROM logs
             ORDER BY timestamp DESC
             LIMIT 500
-        """)).mappings().all()      # <── wichtig für Attributzugriff im Template
+        """)).mappings().all()
 
     return render_template(
         'admin.html',
         nutzer=nutzer,
-        logs=logs,   # <── jetzt vorhanden
+        logs=logs,
         user=user
     )
 
@@ -244,6 +273,19 @@ def admin_delete_user(uid):
     log_action(user, f"Benutzer gelöscht (ID {uid})")
     return redirect('/admin')
 
+@app.route('/admin/approve-user/<int:uid>', methods=['POST'])
+def admin_approve_user(uid):
+    user, is_admin = current_user_role()
+    if not is_admin:
+        return redirect('/login')
+
+    with engine.begin() as conn:
+        conn.execute(text("""
+            UPDATE nutzer SET is_approved = TRUE WHERE id = :i
+        """), {"i": uid})
+    log_action(user, f"Benutzer freigegeben (ID {uid})")
+    return redirect('/admin')
+
 # ─────────────────── Admin-Logs ─────────────────────────────────────────
 @app.route('/admin/logs')
 def admin_logs():
@@ -259,6 +301,31 @@ def admin_logs():
         """)).all()
 
     return render_template('logs.html', logs=logs, user=user)
+
+# ─────────────────── User Register ─────────────────────────────────────────
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    error = None
+    if request.method == 'POST':
+        uname = request.form['username'].strip()
+        pwd   = request.form['password']
+
+        if not uname or not pwd:
+            error = "Alle Felder ausfüllen."
+        else:
+            # Prüfen, ob Name schon existiert
+            with engine.begin() as conn:
+                exists = conn.execute(text(
+                    "SELECT 1 FROM nutzer WHERE username=:u"
+                ), {"u": uname}).scalar()
+            if exists:
+                error = "Benutzername belegt."
+            else:
+                add_user(uname, pwd)          # legt is_approved=FALSE an
+                log_action(uname, "Registrierung angelegt (wartet auf Freigabe)")
+                return render_template('reg_wait.html')
+
+    return render_template('register.html', error=error)
 
 # ─────────────────── App-Start (lokal) ─────────────────────────────────
 if __name__ == '__main__':
