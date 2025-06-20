@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,9 @@
 
   <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Bebas+Neue&family=Press+Start+2P&family=Noto+Sans+JP&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Bebas+Neue&family=Press+Start+2P&family=Noto+Sans+JP&display=swap"
+    rel="stylesheet">
 </head>
 
 <body>
@@ -47,21 +50,20 @@
         <td>{{ '✅' if is_admin else '❌' }}</td>
         <td>{{ '✅' if is_approved else '⌛' }}</td>
         <td>
-
-          {# Freigeben-Button nur wenn noch nicht approved #}
           {% if not is_approved %}
           <form action="/admin/approve-user/{{ id }}" method="POST" style="display:inline;">
             <button title="Freigeben">✔</button>
           </form>
           {% endif %}
 
-          {# Löschen-Button (nicht für eigenen Account) #}
           {% if name != user %}
           <form action="/admin/delete-user/{{ id }}" method="POST" style="display:inline;">
             <button title="Löschen">🗑️</button>
           </form>
+          <form action="/admin/toggle-admin/{{ id }}" method="POST" style="display:inline;">
+            <button title="Adminstatus umschalten">🛡️</button>
+          </form>
           {% else %}(du){% endif %}
-
         </td>
       </tr>
       {% endfor %}
@@ -71,7 +73,11 @@
   <h2>Aktions-Logs</h2>
   <table>
     <thead>
-      <tr><th>User</th><th>Aktion</th><th>Zeitpunkt</th></tr>
+      <tr>
+        <th>User</th>
+        <th>Aktion</th>
+        <th>Zeitpunkt</th>
+      </tr>
     </thead>
     <tbody>
       {% for l in logs %}
@@ -86,4 +92,5 @@
 
   <script src="{{ url_for('static', filename='theme.js') }}"></script>
 </body>
+
 </html>

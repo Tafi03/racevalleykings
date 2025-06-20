@@ -307,6 +307,22 @@ def admin_approve_user(uid):
     log_action(user, f"Benutzer freigegeben (ID {uid})")
     return redirect('/admin')
 
+@app.route('/admin/toggle-admin/<int:uid>', methods=['POST'])
+def admin_toggle_admin(uid):
+    user, is_admin = current_user_role()
+    if not is_admin:
+        return redirect('/login')
+
+    with engine.begin() as conn:
+        # Status umkehren
+        conn.execute(text("""
+            UPDATE nutzer
+            SET is_admin = NOT is_admin
+            WHERE id = :i
+        """), {"i": uid})
+    log_action(user, f"Admin-Rechte geändert (ID {uid})")
+    return redirect('/admin')
+
 # ─────────────────── Admin-Logs ─────────────────────────────────────────
 @app.route('/admin/logs')
 def admin_logs():
